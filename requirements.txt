@@ -30,4 +30,5 @@ ushlex
 wsgiref
 olefile
 pyimpfuzzy
+django-cryptographic-fields
 m2crypto

@@ -61,11 +61,11 @@ install_mongo()
         printf "${PASS}Mongo already installed${END}\n"  
     else
         printf "${INFO}Installing MongoDB${END}\n"
-        curl http://downloads.mongodb.org/linux/mongodb-linux-x86_64-2.6.4.tgz > mongodb-linux-x86_64-2.6.4.tgz
-        tar -zxvf mongodb-linux-x86_64-2.6.4.tgz
-        sudo cp ./mongodb-linux-x86_64-2.6.4/bin/* /usr/local/bin/
-        rm  mongodb-linux-x86_64-2.6.4.tgz
-        rm -r mongodb-linux-x86_64-2.6.4
+        curl http://downloads.mongodb.org/linux/mongodb-linux-x86_64-2.6.12.tgz > mongodb-linux-x86_64-2.6.12.tgz
+        tar -zxvf mongodb-linux-x86_64-2.6.12.tgz
+        sudo cp ./mongodb-linux-x86_64-2.6.12/bin/* /usr/local/bin/
+        rm  mongodb-linux-x86_64-2.6.12.tgz
+        rm -r mongodb-linux-x86_64-2.6.12
         if [ ! -f /usr/local/bin/mongod ];
         then
             printf "${FAIL}MongoDB Installation Failed${END}\n"
@@ -157,6 +157,8 @@ server_setup()
         # This is going to escape the '&' character that is a special character in sed 
         SE=$(echo ${SC} | sed -e 's/\\/\\\\/g' | sed -e 's/\//\\\//g' | sed -e 's/&/\\\&/g')
         sed -i -e "s/^\(SECRET_KEY = \).*$/\1\'${SE}\'/1" crits/config/database.py
+        ENC_KEY=$(${PYTH} manage.py generate_encryption_key)
+        sed -i -e "s/^\(FIELD_ENCRYPTION_KEY = \).*$/\1\'${ENC_KEY}\'/1" crits/config/database.py
     else
         echo "Database configuration file exists. skipping!"
     fi

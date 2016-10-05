@@ -21,7 +21,8 @@ MONGO_PASSWORD = ''           # password for the mongo user
 # from django.utils.crypto import get_random_string as grs
 # print grs(50, 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)')
 SECRET_KEY = ''
-
+# Key to use for encrypting fields
+FIELD_ENCRYPTION_KEY = ''
 # DB to use for files
 FILE_DB = GRIDFS # Set to S3 (NO QUOTES) to use S3. You'll also want to set
                  # the stuff below and create your buckets.

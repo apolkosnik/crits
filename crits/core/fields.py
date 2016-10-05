@@ -4,11 +4,15 @@ from dateutil.parser import parse
 from mongoengine import DateTimeField, FileField
 from mongoengine.connection import DEFAULT_CONNECTION_NAME
 from mongoengine.python_support import str_types
+from cryptographic_fields.fields import EncryptedCharField
 import io
 
 from django.conf import settings
 if settings.FILE_DB == settings.S3:
     import crits.core.s3_tools as S3
+
+class CritsEncryptedCharField(EncryptedCharField):
+    encrypted_char_field = EncryptedCharField(max_length=256) 
 
 class CritsDateTimeField(DateTimeField):
     """

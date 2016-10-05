@@ -488,6 +488,7 @@ else:
         'tastypie_mongoengine',
         'django_mongoengine',
         'django_mongoengine.mongo_auth',
+        'cryptographic_fields',
         )
 
     MIDDLEWARE_CLASSES = (
