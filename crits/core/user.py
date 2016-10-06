@@ -44,24 +44,24 @@ from mongoengine import BooleanField, ObjectIdField, EmailField
 from mongoengine import EmbeddedDocumentField, IntField
 from mongoengine import DictField, DynamicEmbeddedDocument
 
+from securemongoengine.fields import EncryptedStringField
+
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.hashers import check_password, make_password
 #from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
 #from django.contrib.auth.models import _user_has_module_perms
 from django.core.exceptions import ImproperlyConfigured
-from django.db import models
+#from django.db import models
 #from django.utils.translation import ugettext_lazy as _
 
 from crits.config.config import CRITsConfig
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, UnsupportedAttrs
 from crits.core.user_migrate import migrate_user
-
-
+_key = settings.FIELD_ENCRYPTION_KEY
 
 logger = logging.getLogger(__name__)
-
 
 class EmbeddedSubscription(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -294,13 +294,13 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     first_name = StringField(max_length=30,
                              verbose_name='first name')
 
-    last_name = StringField(max_length=30,
+    last_name = EncryptedStringField(key=_key, max_length=30,
                             verbose_name='last name')
     email = EmailField(verbose_name='e-mail address')
     password = StringField(max_length=128,
                            verbose_name='password',
                            help_text="Use '[algo]$[iterations]$[salt]$[hexdigest]' or use the <a href=\"password/\">change password form</a>.")
-    secret = StringField(verbose_name='TOTP Secret')
+    secret = EncryptedStringField(key=_key, verbose_name='TOTP Secret',default="")
     is_staff = BooleanField(default=False,
                             verbose_name='staff status',
                             help_text="Designates whether the user can log into this admin site.")
@@ -317,7 +317,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
 
     invalid_login_attempts = IntField(default=0)
     login_attempts = ListField(EmbeddedDocumentField(EmbeddedLoginAttempt))
-    organization = StringField(default=settings.COMPANY_NAME)
+    organization = EncryptedStringField(key=_key, default=settings.COMPANY_NAME)
     password_reset = EmbeddedDocumentField(EmbeddedPasswordReset, default=EmbeddedPasswordReset())
     role = StringField(default="Analyst")
     sources = ListField(StringField())
@@ -325,7 +325,6 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     favorites = EmbeddedDocumentField(EmbeddedFavorites, default=EmbeddedFavorites())
     prefs = EmbeddedDocumentField(PreferencesField, default=PreferencesField())
     totp = BooleanField(default=False)
-    secret = StringField(default="")
     api_keys = ListField(EmbeddedDocumentField(EmbeddedAPIKey))
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']

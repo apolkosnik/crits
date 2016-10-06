@@ -157,7 +157,10 @@ server_setup()
         # This is going to escape the '&' character that is a special character in sed 
         SE=$(echo ${SC} | sed -e 's/\\/\\\\/g' | sed -e 's/\//\\\//g' | sed -e 's/&/\\\&/g')
         sed -i -e "s/^\(SECRET_KEY = \).*$/\1\'${SE}\'/1" crits/config/database.py
-        ENC_KEY=$(${PYTH} manage.py generate_encryption_key)
+        SC1=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(\-_=+)' | fold -w 50 | head -n 1)
+        # This is going to escape the '&' character that is a special character in sed 
+        SE1=$(echo ${SC1} | sed -e 's/\\/\\\\/g' | sed -e 's/\//\\\//g' | sed -e 's/&/\\\&/g')
+        ENC_KEY=$(echo ${SE1} | fold -w 33 | head -n 1)
         sed -i -e "s/^\(FIELD_ENCRYPTION_KEY = \).*$/\1\'${ENC_KEY}\'/1" crits/config/database.py
     else
         echo "Database configuration file exists. skipping!"
