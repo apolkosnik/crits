@@ -1,5 +1,8 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from optparse import make_option
+
+import sys
 
 from crits.core.role import Role
 
@@ -7,6 +10,31 @@ class Command(BaseCommand):
     """
     Script Class.
     """
+    option_list = BaseCommand.option_list + (
+        make_option("-a", "--all", action="store_true", dest="mall",
+                    default=False,
+                    help="Create All Roles and migrate legacy roles."),
+        make_option("-A", "--Analyst", action="store_true",
+                    dest="analyst",
+                    default=False,
+                    help="Create Analyst Role."),
+        make_option("-d", "--drop", action="store_true",
+                    dest="drop",
+                    default=False,
+                    help="Drop all existing roles."),
+        make_option("-m", "--migrate", action="store_true",
+                    dest="migrate",
+                    default=False,
+                    help="Migrate legacy role to new Role"),
+        make_option("-r", "--readonly", action="store_true",
+                    dest="readonly",
+                    default=False,
+                    help="Create Read Only Role."),
+        make_option("-u", "--UberAdmin", action="store_true",
+                    dest="uberadmin",
+                    default=False,
+                    help="Create UberAdmin Role."),
+        )
 
     help = 'Creates the default UberAdmin Role in MongoDB.'
 
@@ -14,8 +42,31 @@ class Command(BaseCommand):
         """
         Script Execution.
         """
+        mall = options.get('mall')
+        analyst = options.get('analyst')
+        drop = options.get('drop')
+        migrate = options.get('migrate')
+        readonly = options.get('readonly')
+        uberadmin = options.get('uberadmin')
 
-        add_uber_admin_role(True)
+        if mall or drop:
+            print "Drop protection disabled. Dropping all Roles!"
+            Role.drop_collection()
+        if mall or uberadmin:
+            add_uber_admin_role()
+        if mall or readonly:
+            print("Creating Read Only Role")
+            add_readonly_role()
+        if mall or analyst:
+            print("Creating Analyst Role")
+            add_analyst_role()
+        if mall or migrate:
+            print("Migrating Legacy Roles.")
+            migrate_roles()
+
+        else:
+            print("You must select something. See '-h' for options.")
+
 
 def add_uber_admin_role(drop=False):
     """
@@ -136,3 +187,41 @@ def add_analyst_role():
                 setattr(role, p, False)
 
     role.save()
+
+def migrate_roles():
+    """
+    Migrate legacy role objects to new RBAC Role objects
+
+    """
+    from crits.core.mongo_tools import mongo_connector
+    import sys
+
+    collection = mongo_connector(settings.COL_USERS)
+    users = collection.find()
+
+    for user in users:
+        roles = []
+        role = None
+        try:
+            if 'role' in user:
+                role = user['role']
+            elif 'unsupported_attrs' in user and 'role' in user['unsupported_attrs']:
+                role = user['unsupported_attrs']['role']
+            else:
+                print "Error migrating legacy roles for user %s. No legacy role found to migrate." % user
+                sys.exit()
+        except:
+            print "Error migrating legacy roles for user %s. No legacy role found to migrate." % user
+            sys.exit()
+
+
+        if role == 'Administrator':
+            roles.append('UberAdmin')
+        elif role:
+            roles.append(role)
+
+
+        result = collection.users.update_one(
+           {"_id": user['_id']},
+           {"$set": {"roles": roles}}
+        )

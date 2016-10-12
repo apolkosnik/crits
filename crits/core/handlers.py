@@ -2324,6 +2324,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         response['TotalRecordCount'] = response.pop('count')
         response['Result'] = response.pop('result')
 
+        acl = get_acl_object(col_obj._meta['crits_type'])
+
         for doc in response['Records']:
             for key, value in doc.items():
                 # all dates should look the same
@@ -2334,9 +2336,10 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     doc['password_reset'] = None
                 if key == "campaign":
                     camps = []
-                    if user.has_access_to(Common.CAMPAIGN_READ) and user.has_access_to(get_acl_object(col_obj._meta['crits_type']).CAMPAIGNS_READ):
-                        for campdict in value:
-                            camps.append(campdict['name'])
+                    if user.has_access_to(Common.CAMPAIGN_READ):
+                        if acl and user.has_access_to(acl.CAMPAIGNS_READ):
+                            for campdict in value:
+                                camps.append(campdict['name'])
                     doc[key] = "|||".join(camps)
                 elif key == "source":
                     srcs = []
@@ -2345,16 +2348,16 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                             for srcdict in doc[key]:
                                 if srcdict['name'] in users_sources:
                                     srcs.append(srcdict['name'])
-                    elif user.has_access_to(get_acl_object(col_obj._meta['crits_type']).SOURCES_READ):
+                    elif user.has_access_to(acl.SOURCES_READ):
                         for srcdict in doc[key]:
                             if srcdict['name'] in users_sources:
                                 srcs.append(srcdict['name'])
                     doc[key] = "|||".join(srcs)
                 elif key == "status":
-                    if not user.has_access_to(get_acl_object(col_obj._meta['crits_type']).STATUS_READ):
+                    if not user.has_access_to(acl.STATUS_READ):
                         doc[key] = None
                 elif key == "description":
-                    if not user.has_access_to(get_acl_object(col_obj._meta['crits_type']).DESCRIPTION_READ):
+                    if acl and not user.has_access_to(acl.DESCRIPTION_READ):
                         doc[key] = ""
                 elif key == "tags":
                     tags = []
@@ -2858,7 +2861,7 @@ def generate_users_jtable(request, option):
         details_url_key = 'username'
         fields = ['username', 'first_name', 'last_name', 'email',
                    'last_login', 'organization', 'is_active',
-                   'id']
+                   'id', 'roles']
         excludes = ['login_attempts']
         response = jtable_ajax_list(obj_type, details_url, details_url_key,
                                     request, includes=fields,
@@ -2873,7 +2876,7 @@ def generate_users_jtable(request, option):
         'searchurl': None,
         'fields': ['username', 'first_name', 'last_name', 'email',
                    'last_login', 'organization', 'is_active',
-                   'id'],
+                   'id', 'roles'],
         'hidden_fields': ['id'],
         'linked_fields': []
     }
