@@ -923,6 +923,7 @@ function update_dialog(e) {
                         sel.append($('<option></option>').val(y).html(y));
                     });
                     sel.find('option[value="' + sel_val + '"]').attr('selected', true);
+                    sel.attr('disabled', true);
                 }
             });
         }
