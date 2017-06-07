@@ -217,7 +217,7 @@ class AnalysisTask(object):
         self.start_date = None
         self.finish_date = None
         self.status = None
-        self.username = user
+        self.user = user
 
 
         self.log = []
@@ -272,7 +272,7 @@ class AnalysisTask(object):
             'template':             self.service.template,
             'distributed':          self.service.distributed,
             'version':              self.service.version,
-            'analyst':              self.username,
+            'analyst':              self.user.username,
             'id':                   self.task_id,
             'source':               self.source,
             'start_date':           self.start_date,
@@ -476,7 +476,7 @@ class Service(object):
                               str(self.current_task.obj.id),
                               self.current_task.task_id,
                               status,
-                              self.current_task.username)
+                              self.current_task.user.username)
                 logger.debug("Finished analysis %s, %s, runtime: %s" % (self.current_task.task_id, self.name, str(datetime.now() - t_start)))
             # Reset current_task so another task can be assigned.
             self.current_task = None

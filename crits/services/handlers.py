@@ -126,8 +126,8 @@ def service_work_handler(service_instance, final_config):
     service_instance.execute(final_config)
 
 
-def run_service(name, type_, id_, user, obj=None,
-                execute='local', custom_config={}, is_triage_run=False, **kwargs):
+def run_service(name, type_, id_, user, obj=None, execute='local',
+                custom_config={}, is_triage_run=False, **kwargs):
     """
     Run a service.
 
@@ -231,12 +231,12 @@ def run_service(name, type_, id_, user, obj=None,
     # Determine if this service is being run via triage
     if is_triage_run:
         service_instance.is_triage_run = True
-        
+
     # Give the service a chance to modify the config that gets saved to the DB.
     saved_config = dict(final_config)
     service_class.save_runtime_config(saved_config)
 
-    task = AnalysisTask(local_obj.obj, service_instance, user.username)
+    task = AnalysisTask(local_obj.obj, service_instance, user)
     task.config = AnalysisConfig(**saved_config)
     task.start()
     add_task(task)
@@ -330,11 +330,11 @@ def add_result(object_type, object_id, analysis_id, result, type_, subtype,
     """
 
     return add_results(object_type, object_id, analysis_id, [result], [type_],
-                      [subtype], analyst)
+                      [subtype], user)
 
 
 def add_results(object_type, object_id, analysis_id, result, type_, subtype,
-               analyst):
+                user):
     """
     Add multiple results to an analysis task.
 
@@ -350,8 +350,8 @@ def add_results(object_type, object_id, analysis_id, result, type_, subtype,
     :type type_: list of str
     :param subtype: The list of result subtypes.
     :type subtype: list of str
-    :param analyst: The user updating the results.
-    :type analyst: str
+    :param user: The user updating the results.
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
@@ -470,8 +470,10 @@ def finish_task(object_type, object_id, analysis_id, status, user):
 
     # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
-    sources = user_sources(user)
-    obj = klass.objects(id=object_id, source__name__in=sources).first()
+    params = {'id': object_id}
+    if hasattr(klass, 'source'):
+        params['source__name__in'] = user_sources(user)
+    obj = klass.objects(**params).first()
     if not obj:
         results['message'] = "Could not find object to add results to."
         return results

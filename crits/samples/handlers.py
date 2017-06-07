@@ -1,4 +1,3 @@
-import copy
 import json
 import logging
 import os
@@ -35,7 +34,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
 from crits.core.source_access import SourceAccess
-from crits.core.user_tools import user_sources
+from crits.core.user_tools import user_sources, get_user_organization
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
@@ -49,7 +48,7 @@ from crits.services.handlers import run_triage, get_supported_services
 from crits.stats.handlers import generate_yara_hits
 
 from crits.vocabulary.relationships import RelationshipTypes
-from crits.vocabulary.acls import SampleACL
+from crits.vocabulary.acls import SampleACL, PCAPACL
 
 logger = logging.getLogger(__name__)
 
@@ -662,14 +661,15 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
             shutil.rmtree(extractdir)
     return samples
 
-def handle_file(filename, data, source, source_method='Generic', source_reference='',
-                source_tlp='', related_md5=None, related_id=None, related_type=None,
-                relationship_type=None, backdoor=None, user='', campaign=None,
-                confidence='low', md5_digest=None, sha1_digest=None,
-                sha256_digest=None, size=0, mimetype=None, bucket_list=None,
-                ticket=None, relationship=None, inherited_source=None,
-                is_validate_only=False, is_return_only_md5=True, cache={},
-                backdoor_name=None, backdoor_version=None, description=''):
+def handle_file(filename, data, source, source_method='', source_reference='',
+                source_tlp='', related_md5=None, related_id=None,
+                related_type=None, relationship_type=None, backdoor=None,
+                user='', campaign=None, confidence='low', md5_digest=None,
+                sha1_digest=None, sha256_digest=None, size=0, mimetype=None,
+                bucket_list=None, ticket=None, relationship=None,
+                inherited_source=None, is_validate_only=False,
+                is_return_only_md5=True, cache={}, backdoor_name=None,
+                backdoor_version=None, description=''):
     """
     Handle adding a file.
 
@@ -745,7 +745,7 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
     if data:
         try:
             # do we have a pcap?
-            if detect_pcap(data):
+            if detect_pcap(data) and user.has_access_to(PCAPACL.WRITE):
                 pres = handle_pcap_file(filename,
                                         data,
                                         source,
@@ -754,8 +754,9 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
                                         related_id=related_id,
                                         related_md5=related_md5,
                                         related_type=related_type,
-                                        method=method,
-                                        reference=reference,
+                                        method=source_method,
+                                        reference=source_reference,
+                                        tlp=source_tlp,
                                         relationship=relationship,
                                         bucket_list=bucket_list,
                                         ticket=ticket)
@@ -816,6 +817,12 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
             return None
         else:
             return retVal
+
+    if not user.has_access_to(SampleACL.WRITE):
+        retVal['success'] = False
+        retVal['message'] = 'User does not have permission to add sample.'
+
+        return retVal
 
     if data:
         md5_digest = md5(data).hexdigest()
@@ -911,13 +918,17 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
 
     # generate new source information and add to sample
     if isinstance(source, basestring) and len(source) > 0:
-        s = create_embedded_source(source,
-                                   method=source_method,
-                                   reference=source_reference,
-                                   tlp=source_tlp,
-                                   analyst=user)
+        if user.check_source_write(source):
+            s = create_embedded_source(source,
+                                       method=source_method,
+                                       reference=source_reference,
+                                       tlp=source_tlp,
+                                       analyst=user.username)
+            sample.add_source(s)
+        else:
+            return {"success":False,
+                    "message": "User does not have permission to add object using source %s." % source}
         # this will handle adding a new source, or an instance automatically
-        sample.add_source(s)
     elif isinstance(source, EmbeddedSource):
         sample.add_source(source, method=source_method, reference=source_reference, tlp=source_tlp)
     elif isinstance(source, list) and len(source) > 0:
@@ -942,7 +953,7 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
             campaign_array = campaign
 
             if isinstance(campaign, basestring):
-                campaign_array = [EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user)]
+                campaign_array = [EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user.username)]
 
             for campaign_item in campaign_array:
                 sample.add_campaign(campaign_item)
@@ -964,7 +975,7 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
                             relationship = RelationshipTypes.RELATED_TO
                 sample.add_relationship(related_obj,
                                         relationship,
-                                        analyst=user,
+                                        analyst=user.username,
                                         get_rels=False)
                 sample.save(username=user)
 
@@ -975,7 +986,7 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
             if backdoor:
                 backdoor.add_relationship(sample,
                                           RelationshipTypes.RELATED_TO,
-                                          analyst=user)
+                                          analyst=user.username)
                 backdoor.save()
             # Also relate to the specific instance backdoor.
             if backdoor_version:
@@ -985,7 +996,7 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
                 if backdoor:
                     backdoor.add_relationship(sample,
                                               RelationshipTypes.RELATED_TO,
-                                              analyst=user)
+                                              analyst=user.username)
                     backdoor.save()
 
         # reloading clears the _changed_fields of the sample object. this prevents

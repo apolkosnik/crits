@@ -148,8 +148,20 @@ def add_screenshot(description, tags, source, method, reference, tlp, analyst,
             screenshot_id = screenshot_id.strip().lower()
             s = Screenshot.objects(id=screenshot_id).first()
             if s:
-                s.add_source(source=source, method=method, reference=reference,
-                        analyst=analyst, tlp=tlp)
+                if isinstance(source, basestring) and len(source) > 0:
+                    s_embed = create_embedded_source(source, method=method,
+                                                    reference=reference,
+                                                    analyst=analyst,
+                                                     tlp=tlp)
+                    s.add_source(s_embed)
+                elif isinstance(source, EmbeddedSource):
+                    s.add_source(source=source, method=method,
+                                 reference=reference, analyst=analyst, tlp=tlp)
+                elif isinstance(source, list) and len(source) > 0:
+                    for x in source:
+                        if isinstance(x, EmbeddedSource):
+                            s.add_source(x, method=method, reference=reference,
+                                         analyst=analyst, tlp=tlp)
                 s.add_tags(tags)
                 s.save()
                 obj.screenshots.append(screenshot_id)
@@ -168,8 +180,20 @@ def add_screenshot(description, tags, source, method, reference, tlp, analyst,
             s.md5 = md5
             screenshot.seek(0)
             s.add_screenshot(screenshot, tags)
-        s.add_source(source=source, method=method, reference=reference,
-                    analyst=analyst, tlp=tlp)
+        if isinstance(source, basestring) and len(source) > 0:
+            s_embed = create_embedded_source(source, method=method,
+                                             reference=reference,
+                                            analyst=analyst,
+                                             tlp=tlp)
+            s.add_source(s_embed)
+        elif isinstance(source, EmbeddedSource):
+            s.add_source(source, method=method, reference=reference,
+                         analyst=analyst, tlp=tlp)
+        elif isinstance(source, list) and len(source) > 0:
+            for x in source:
+                if isinstance(x, EmbeddedSource):
+                    s.add_source(x, method=method, reference=reference,
+                                 analyst=analyst, tlp=tlp)
         if not s.screenshot and not s.thumb:
             result['message'] = "Problem adding screenshot to GridFS. No screenshot uploaded."
             return result

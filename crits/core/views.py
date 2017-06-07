@@ -56,7 +56,7 @@ from crits.core.handlers import edit_role_description, edit_role_name
 from crits.core.handlers import modify_tlp, description_update, data_update
 from crits.core.handlers import do_add_preferred_actions, add_new_action
 from crits.core.handlers import action_add, action_remove, action_update
-from crits.core.handlers import get_action_types_for_tlo
+from crits.core.handlers import get_action_types_for_tlo, generate_audit_csv
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, user_sources
@@ -429,11 +429,11 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
 
         # TOTP can still be required for Remote Users
         totp_pass = request.POST.get('totp_pass', None)
-
-        if (not username or
+        logging_in_user = get_user_info(username)
+        if (not username or not logging_in_user.has_access_to(GeneralACL.WEB_INTERFACE) or
                 (not totp_pass and crits_config.totp_web == 'Required')):
             response['success'] = False
-            response['message'] = 'Unknown user or bad password.'
+            response['message'] = 'Unknown user, bad password, or user does not have permission to log on using the web UI.'
             return HttpResponse(json.dumps(response),
                                 content_type="application/json")
 
@@ -1914,12 +1914,14 @@ def audit_listing(request, option=None):
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
     :param option: Action to take.
-    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :type option: str of either 'csv', 'jtlist', 'jtdelete', or 'inline'.
     :returns: :class:`django.http.HttpResponse`
     """
 
     user = request.user
     if user.has_access_to(GeneralACL.CONTROL_PANEL_AUDIT_LOG_READ):
+        if option == "csv":
+            return generate_audit_csv(request)
         return generate_audit_jtable(request, option)
     else:
         error = "User does not have permission to view audit listing."

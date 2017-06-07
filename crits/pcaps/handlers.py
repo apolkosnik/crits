@@ -272,8 +272,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
             'message':  'Data length <= 0'
         }
         return status
-    if ((related_type and not (related_id or related_md5)) or
-        (not related_type and (related_id or related_md5))):
+    if ((related_id or related_md5) and not related_type):
         status = {
             'success':   False,
             'message':  'Must specify both related_type and related_id or related_md5.'
@@ -315,11 +314,16 @@ def handle_pcap_file(filename, data, source_name, user=None,
 
     # generate source information and add to pcap
     if isinstance(source_name, basestring) and len(source_name) > 0:
-        s = create_embedded_source(source_name,
-                                   method=method,
-                                   reference=reference,
-                                   tlp=tlp,
-                                   analyst=user)
+        if user.check_source_write(source_name):
+            s = create_embedded_source(source_name,
+                                       method=method,
+                                       reference=reference,
+                                       tlp=tlp,
+                                       analyst=user.username)
+        else:
+            return {"success":False,
+                    "message": "User does not have permission to add object \
+                                using source %s." % source_name}
         pcap.add_source(s)
     elif isinstance(source_name, EmbeddedSource):
         pcap.add_source(source_name, method=method, reference=reference)

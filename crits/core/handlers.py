@@ -1982,18 +1982,19 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     :returns: dict -- Keys are result, data, count, msg, crits_type.  'data'
         contains a :class:`crits.core.crits_mongoengine.CritsQuerySet` object.
     """
-
     results = {'result':'ERROR'}
     results['data'] = []
     results['count'] = 0
     results['msg'] = ""
     results['crits_type'] = col_obj._meta['crits_type']
     sourcefilt = user_sources(user)
+
     if isinstance(sort,basestring):
         sort = sort.split(',')
     if isinstance(projection,basestring):
         projection = projection.split(',')
     docs = None
+
     try:
         if not issubclass(col_obj,CritsSourceDocument):
             results['count'] = col_obj.objects(__raw__=query).count()
@@ -2015,25 +2016,28 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                     docs = col_obj.objects(__raw__=query).order_by(*sort).\
                                     skip(skip).limit(limit)
         # Else, all other objects that have sources associated with them
-        # need to be filtered appropriately
+        # need to be filtered appropriately for source access and TLP access
         else:
-            results['count'] = col_obj.objects(source__name__in=sourcefilt,
-                                               __raw__=query).count()
+            filterlist = []
+            docs = col_obj.objects(__raw__=query)
+            for doc in docs:
+                if user.check_source_tlp(doc):
+                    filterlist.append(str(doc.id))
+
+            results['count'] = len(filterlist)
             if count:
                 results['result'] = "OK"
                 return results
 
             if projection:
-                docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
-                                    order_by(*sort).skip(skip).limit(limit).\
-                                    only(*projection)
+                docs = col_obj.objects.filter(id__in=filterlist).\
+                                            order_by(*sort).skip(skip).limit(limit).\
+                                            only(*projection)
             else:
                 # Hack to fix Dashboard
-                docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
-                                    order_by(*sort).skip(skip).limit(limit)
+                docs = col_obj.objects.filter(id__in=filterlist).\
+                                            order_by(*sort).skip(skip).limit(limit)
 
-            # Sanitize results for Source TLP
-            docs = docs.sanitize_source_tlps(user)
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
                 doc.sanitize_sources(username="%s" % user, sources=sourcefilt)
@@ -2838,12 +2842,12 @@ def generate_roles_jtable(request, option):
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
-                                   'jtid': 'users_listing'},
+                                   'jtid': 'roles_listing'},
                                   RequestContext(request))
     else:
         return render_to_response("user_editor.html",
                                   {'jtable': jtable,
-                                   'jtid': 'users_listing'},
+                                   'jtid': 'roles_listing'},
                                   RequestContext(request))
 
 def generate_users_jtable(request, option):
@@ -2870,6 +2874,7 @@ def generate_users_jtable(request, option):
                                     excludes=excludes)
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type="application/json")
+
     jtopts = {
         'title': "Users",
         'default_sort': 'last_login DESC',
@@ -3863,6 +3868,18 @@ def generate_counts_jtable(request, option):
                                   {'data': request,
                                    'error': "Invalid request"},
                                   RequestContext(request))
+
+
+def generate_audit_csv(request):
+    """
+    Generate a CSV file of the audit log entries
+
+    :param request: The request for this CSV.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    return csv_export(request, AuditLog)
 
 
 def generate_audit_jtable(request, option):
