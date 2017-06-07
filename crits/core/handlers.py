@@ -123,7 +123,7 @@ def action_add(type_, id_, tlo_action, user=None, **kwargs):
     except (ValidationError, TypeError, KeyError), e:
         return {'success': False, 'message': e}
 
-def action_remove(type_, id_, date, action, user, **kwargs):
+def action_remove(type_, id_, date, action_type, user, **kwargs):
     """
     Remove an action from a TLO.
 
@@ -133,8 +133,8 @@ def action_remove(type_, id_, date, action, user, **kwargs):
     :type id_: str
     :param date: The date of the action to remove.
     :type date: datetime.datetime
-    :param action: The name of the action to remove.
-    :type action: str
+    :param action_type: The name of the action to remove.
+    :type action_type: str
     :param analyst: The user removing the action.
     :type analyst: str
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
@@ -157,7 +157,7 @@ def action_remove(type_, id_, date, action, user, **kwargs):
                 'message': 'Could not find TLO'}
     try:
         date = datetime_parser(date)
-        obj.delete_action(date, action)
+        obj.delete_action(date, action_type)
         obj.save(username=user)
         return {'success': True}
     except (ValidationError, TypeError), e:
@@ -1697,6 +1697,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         'sha1hash': {'sha1': search_query},
         'ssdeephash': {'ssdeep': search_query},
         'sha256hash': {'sha256': search_query},
+        'impfuzzyhash': {'impfuzzy': search_query},
         # slow in larger collections
         'filename': {'$or': [
             {'filename': search_query},
@@ -1706,6 +1707,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         # slightly slow in larger collections
         'object_value': {'objects.value': search_query},
         'bucket_list': {'bucket_list': search_query},
+        'ticket': {'tickets.ticket_number': search_query},
         'sectors': {'sectors': search_query},
         'source': {'source.name': search_query},
     }

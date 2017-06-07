@@ -9,7 +9,8 @@ from django.template import RequestContext
 from django.core.urlresolvers import reverse
 
 from crits.core.class_mapper import class_from_id
-from crits.core.crits_mongoengine import json_handler
+from crits.core.crits_mongoengine import json_handler, create_embedded_source
+from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.handlers import build_jtable, jtable_ajax_list,jtable_ajax_delete
 from crits.core.user_tools import user_sources
 from crits.screenshots.screenshot import Screenshot
@@ -101,7 +102,9 @@ def add_screenshot(description, tags, source, method, reference, tlp, analyst,
     :param tags: Tags associated with this screenshot.
     :type tags: str, list
     :param source: The source who provided the screenshot.
-    :type source: str
+    :type source_name: str,
+                :class:`crits.core.crits_mongoengine.EmbeddedSource`,
+                list of :class:`crits.core.crits_mongoengine.EmbeddedSource`
     :param method: The method of acquiring this screenshot.
     :type method: str
     :param reference: A reference to the source of this screenshot.

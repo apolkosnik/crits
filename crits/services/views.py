@@ -276,7 +276,8 @@ def service_run(request, name, crits_type, identifier):
                              identifier,
                              request.user,
                              execute=settings.SERVICE_MODEL,
-                             custom_config=custom_config)
+                             custom_config=custom_config,
+                             is_triage_run=False)
     else:
         result = {"success":False,
                   "message":"User does not have permission to run services."}
