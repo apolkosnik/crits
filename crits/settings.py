@@ -1,3 +1,4 @@
+from __future__ import print_function
 # CRITs environment chooser
 
 import errno
@@ -124,7 +125,7 @@ BUCKET_SAMPLES = "samples"
 # Import custom Database config
 dbfile = os.path.join(SITE_ROOT, 'config/database.py')
 if os.path.exists(dbfile):
-    execfile(dbfile)
+    exec(open(dbfile).read())
 
 if TEST_RUN:
     MONGO_DATABASE = 'crits-unittest'
@@ -232,7 +233,7 @@ CRITS_EMAIL =               crits_config.get('crits_email', '')
 CRITS_EMAIL_SUBJECT_TAG =   crits_config.get('crits_email_subject_tag', '')
 CRITS_EMAIL_END_TAG =       crits_config.get('crits_email_end_tag', True)
 DEBUG =                     crits_config.get('debug', True)
-ENABLE_DT =                 crits_config.get('enable_dt', False)
+ENABLE_DT = False #                crits_config.get('enable_dt', False)
 if crits_config.get('email_host', None):
     EMAIL_HOST =            crits_config.get('email_host', None)
 if crits_config.get('email_port', None):
@@ -531,7 +532,6 @@ if old_mongoengine:
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -545,6 +545,8 @@ if old_mongoengine:
 
     if django.VERSION >= (1,8,0):
         _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
+    elif django.VERSION <(2,0,0):
+         _MIDDLEWARE += ('django.contrib.auth.middleware.SessionAuthenticationMiddleware',)
     # Only needed for mongoengine<0.10
     _MIDDLEWARE += ('crits.core.user.AuthenticationMiddleware',)
 
@@ -609,7 +611,6 @@ else:
         'django.middleware.common.CommonMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -622,7 +623,8 @@ else:
 
     if django.VERSION >= (1,8,0):
         _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
-
+    elif django.VERSION <(2,0,0):
+         _MIDDLEWARE += ('django.contrib.auth.middleware.SessionAuthenticationMiddleware',)
     SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
     #SESSION_ENGINE = 'django_mongoengine.sessions'
 
@@ -645,14 +647,14 @@ if REMOTE_USER:
             'django.middleware.common.CommonMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
-            'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
             'django.contrib.messages.middleware.MessageMiddleware',
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
         )
         if django.VERSION >= (1,8,0):
             _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
-
+        elif django.VERSION <(2,0,0):
+            _MIDDLEWARE += ('django.contrib.auth.middleware.SessionAuthenticationMiddleware',)
         _MIDDLEWARE += (
             'crits.core.user.AuthenticationMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
@@ -667,7 +669,6 @@ if REMOTE_USER:
             'django.middleware.common.CommonMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
-            'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
             'django.contrib.messages.middleware.MessageMiddleware',
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
@@ -680,7 +681,8 @@ if REMOTE_USER:
 
         if django.VERSION >= (1,8,0):
             _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
-
+        elif django.VERSION <(2,0,0):
+            _MIDDLEWARE += ('django.contrib.auth.middleware.SessionAuthenticationMiddleware',)
         _MIDDLEWARE += ('django.contrib.auth.middleware.RemoteUserMiddleware',)
 
 MONGODB_DATABASES = {
@@ -846,4 +848,4 @@ else:
 # Import custom settings if it exists
 csfile = os.path.join(SITE_ROOT, 'config/overrides.py')
 if os.path.exists(csfile):
-    execfile(csfile)
+    exec(open(csfile).read())

@@ -5,6 +5,7 @@ Recent Samples in that order. The user has the ability to change they're
 positioning, size, columns, and sort order but they are always there and their
 names cannot be changed.
 """
+from __future__ import print_function
 from crits.dashboards.dashboard import SavedSearch, Dashboard
 from crits.core.crits_mongoengine import json_handler
 from crits.core.user_tools import get_acl_object
@@ -26,7 +27,7 @@ from django.http import HttpRequest
 from crits.dashboards.utilities import getHREFLink, get_obj_name_from_title, get_obj_type_from_string
 
 from crits.vocabulary.acls import EmailACL, SampleACL, IndicatorACL, CampaignACL
-import HTMLParser
+import html.parser as HTMLParser
 
 def get_dashboard(user,dashId=None):
     """
@@ -150,7 +151,7 @@ def constructSavedTable(table, records):
     colNames = []
     for column in table.tableColumns:
         col = {}
-        for k,v in column.iteritems():
+        for k,v in column.items():
             if k == "sizeCalculated" or k == "sizeCorrected" or k == 'min':
                 continue
             elif k == "field":
@@ -258,7 +259,7 @@ def parseDocObjectsToStrings(records, obj_type):
             elif isinstance(value, list):
                 if value:
                     for item in value:
-                        if not isinstance(item, basestring):
+                        if not isinstance(item, str):
                             break
                     else:
                         doc[key] = ",".join(value)
@@ -266,7 +267,7 @@ def parseDocObjectsToStrings(records, obj_type):
                     doc[key] = ""
             doc[key] = html_escape(doc[key])
             value = doc[key].strip()
-            if isinstance(value, unicode) or isinstance(value, str):
+            if isinstance(value, str):
                 val = ' '.join(value.split())
                 val = val.replace('"',"'")
                 doc[key] = val
@@ -338,8 +339,8 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
         if oldDashId:
             deleteDashboardIfEmpty(oldDashId)
     except Exception as e:
-        print "ERROR: "
-        print e
+        print("ERROR: ")
+        print(e)
         return {'success': False,
                 'message': "An unexpected error occurred while saving table. Please refresh and try again"}
     return {'success': True,'message': tableName+" Saved Successfully!"}
@@ -392,7 +393,7 @@ def clear_dashboard(dashId):
             else:
                 search.update(unset__col=1,unset__row=1,unset__sizex=1)
     except Exception as e:
-        print e
+        print(e)
         return {'success': False,
                 'message': "An unexpected error occurred while resetting dash. Please refresh and try again"}
     return {'success': True,
@@ -423,7 +424,7 @@ def delete_table(userId, id):
             savedSearch.delete()
             deleteDashboardIfEmpty(dashId)
     except Exception as e:
-        print e
+        print(e)
         return {'success': False,
                 'message': "Search could not be found. Please refresh and try again."}
     return {'success': True,'message': message, 'wasDeleted': doDelete}
@@ -716,7 +717,7 @@ def setPublic(id, makePublic):
         else:#if making public, remove parent
             Dashboard.objects(id=id).update_one(unset__parent=1)
     except Exception as e:
-        print e
+        print(e)
         return "An error occured while updating table. Please try again later."
     return True
 
@@ -743,7 +744,7 @@ def deleteDashboard(id):
         SavedSearch.objects(dashboard=id).delete_one()
         Dashboard.objects(id=id).delete_one()
     except Exception as e:
-        print e
+        print(e)
         return False
     return name
 
@@ -766,7 +767,7 @@ def changeTheme(id, theme):
     try:
         Dashboard.objects(id=id).update_one(set__theme=theme)
     except Exception as e:
-        print e
+        print(e)
         return False
     return "Dashboard updated successfully."
 

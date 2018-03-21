@@ -35,6 +35,21 @@ from crits.stats.handlers import generate_sources
 
 from crits.vocabulary.acls import SampleACL
 
+import cProfile
+
+def do_cprofile(func):
+    def profiled_func(*args, **kwargs):
+        profile = cProfile.Profile()
+        try:
+            profile.enable()
+            result = func(*args, **kwargs)
+            profile.disable()
+            return result
+        finally:
+            profile.print_stats()
+    return profiled_func
+
+#@do_cprofile
 @user_passes_test(user_can_view_data)
 def detail(request, sample_md5):
     """
@@ -67,7 +82,7 @@ def detail(request, sample_md5):
         return render(request, "error.html",
                                   {'error': 'User does not have permission to view Sample details.'})
 
-
+#@do_cprofile
 @user_passes_test(user_can_view_data)
 def samples_listing(request,option=None):
     """
@@ -291,7 +306,7 @@ def upload_file(request, related_md5=None):
                         backdoor_version=backdoor_version,
                         description=description)
 
-            except ZipFileError, zfe:
+            except ZipFileError as zfe:
                 return render(request, 'file_upload_response.html', {'response': json.dumps({'success': False,
                                 'message': zfe.value})})
             else:
@@ -481,7 +496,7 @@ def unzip_sample(request, md5):
             pwd = form.cleaned_data['password']
             try:
                 handle_unzip_file(md5, user=request.user, password=pwd)
-            except ZipFileError, zfe:
+            except ZipFileError as zfe:
                 return render(request, 'error.html', {'error' : zfe.value})
         return HttpResponseRedirect(reverse('crits-samples-views-detail',
                                             args=[md5]))

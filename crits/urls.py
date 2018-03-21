@@ -1,8 +1,26 @@
-import imp
+from __future__ import absolute_import
+import sys
 import os
 
 from django.conf import settings
 from django.conf.urls import include, url
+
+if sys.version_info > (3,5,0):
+    import importlib.machinery
+    import importlib.util
+
+    def load_src(a, b):
+        loader = importlib.machinery.SourceFileLoader(a, b)
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        rdef = importlib.util.module_from_spec(spec)
+        return rdef
+else:
+    import imp
+
+    def load_src(a, b):
+        rdef = imp.load_source(a, b)
+        return rdef
+
 
 urlpatterns = [
 
@@ -42,25 +60,25 @@ handler400 = 'crits.core.errors.custom_400'
 # django_tastypie_mongoengine is broken with more recent versions of mongoengine
 if settings.ENABLE_API:
     from tastypie.api import Api
-    from crits.actors.api import ActorResource, ActorIdentifierResource
-    from crits.backdoors.api import BackdoorResource
-    from crits.campaigns.api import CampaignResource
-    from crits.certificates.api import CertificateResource
-    from crits.comments.api import CommentResource
-    from crits.domains.api import DomainResource
-    from crits.emails.api import EmailResource
-    from crits.events.api import EventResource
-    from crits.exploits.api import ExploitResource
-    from crits.indicators.api import IndicatorResource, IndicatorActivityResource
-    from crits.ips.api import IPResource
-    from crits.pcaps.api import PCAPResource
-    from crits.raw_data.api import RawDataResource
-    from crits.samples.api import SampleResource
-    from crits.screenshots.api import ScreenshotResource
-    from crits.services.api import ServiceResource
-    from crits.signatures.api import SignatureResource
-    from crits.targets.api import TargetResource
-    from crits.vocabulary.api import VocabResource
+    from .crits.actors.api import ActorResource, ActorIdentifierResource
+    from .crits.backdoors.api import BackdoorResource
+    from .crits.campaigns.api import CampaignResource
+    from .crits.certificates.api import CertificateResource
+    from .crits.comments.api import CommentResource
+    from .crits.domains.api import DomainResource
+    from .crits.emails.api import EmailResource
+    from .crits.events.api import EventResource
+    from .crits.exploits.api import ExploitResource
+    from .crits.indicators.api import IndicatorResource, IndicatorActivityResource
+    from .crits.ips.api import IPResource
+    from .crits.pcaps.api import PCAPResource
+    from .crits.raw_data.api import RawDataResource
+    from .crits.samples.api import SampleResource
+    from .crits.screenshots.api import ScreenshotResource
+    from .crits.services.api import ServiceResource
+    from .crits.signatures.api import SignatureResource
+    from .crits.targets.api import TargetResource
+    from .crits.vocabulary.api import VocabResource
 
     v1_api = Api(api_name='v1')
     v1_api.register(ActorResource())
@@ -91,9 +109,9 @@ if settings.ENABLE_API:
                 abs_path = os.path.join(service_directory, d, 'urls.py')
                 if os.path.isfile(abs_path):
                     try:
-                        rdef = imp.load_source('urls', abs_path)
+                        rdef = load_src('urls', abs_path)
                         rdef.register_api(v1_api)
-                    except Exception, e:
+                    except Exception as e:
                         pass
 
     urlpatterns.append(url(r'^api/', include(v1_api.urls)))

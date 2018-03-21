@@ -1,14 +1,17 @@
 import cgi
 import os
 import datetime
-import HTMLParser
+import html.parser
 import json
 import logging
 import re
-import ushlex as shlex
+import shlex
 import urllib
 
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 from bson.objectid import ObjectId
 from django.conf import settings
 
@@ -79,7 +82,21 @@ from crits.core.totp import valid_totp
 
 from crits.vocabulary.acls import *
 
+import cProfile
 
+def do_cprofile(func):
+    def profiled_func(*args, **kwargs):
+        profile = cProfile.Profile()
+        try:
+            profile.enable()
+            result = func(*args, **kwargs)
+            profile.disable()
+            return result
+        finally:
+            profile.print_stats()
+    return profiled_func
+
+#@do_cprofile
 logger = logging.getLogger(__name__)
 
 def action_add(type_, id_, tlo_action, user=None, **kwargs):
@@ -125,7 +142,7 @@ def action_add(type_, id_, tlo_action, user=None, **kwargs):
                        date = datetime.datetime.now())
         obj.save(username=user)
         return {'success': True, 'object': tlo_action}
-    except (ValidationError, TypeError, KeyError), e:
+    except (ValidationError, TypeError, KeyError) as e:
         return {'success': False, 'message': e}
 
 def action_remove(type_, id_, date, action_type, user, **kwargs):
@@ -165,7 +182,7 @@ def action_remove(type_, id_, date, action_type, user, **kwargs):
         obj.delete_action(date, action_type)
         obj.save(username=user)
         return {'success': True}
-    except (ValidationError, TypeError), e:
+    except (ValidationError, TypeError) as e:
         return {'success': False, 'message': e}
 
 def action_update(type_, id_, tlo_action, user=None, **kwargs):
@@ -212,7 +229,7 @@ def action_update(type_, id_, tlo_action, user=None, **kwargs):
                         tlo_action['date'])
         obj.save(username=user)
         return {'success': True, 'object': tlo_action}
-    except (ValidationError, TypeError), e:
+    except (ValidationError, TypeError) as e:
         return {'success': False, 'message': e}
 
 def description_update(type_, id_, description, user, **kwargs):
@@ -244,13 +261,13 @@ def description_update(type_, id_, description, user, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.html.parser()
     description = h.unescape(description)
     try:
         obj.description = description
         obj.save(username=user)
         return {'success': True, 'message': "Description set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def data_update(type_, id_, data, analyst):
@@ -282,13 +299,13 @@ def data_update(type_, id_, data, analyst):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.html.parser()
     data = h.unescape(data)
     try:
         obj.data = data
         obj.save(username=analyst)
         return {'success': True, 'message': "Data set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def get_favorites(analyst):
@@ -333,7 +350,7 @@ def get_favorites(analyst):
                   <tbody>
               '''
 
-    for type_, attr in field_dict.iteritems():
+    for type_, attr in field_dict.items():
         if type_ in favorites:
             ids = [ObjectId(s) for s in favorites[type_]]
             objs = class_from_type(type_).objects(id__in=ids).only(attr)
@@ -406,7 +423,7 @@ def status_update(type_, id_, value="In Progress", user=None, **kwargs):
 
         obj.save(username=user)
         return {'success': True, 'value': value}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 
@@ -489,7 +506,7 @@ def add_releasability(type_, id_, name, user, **kwargs):
         obj.reload()
         return {'success': True,
                 'obj': obj.to_dict()['releasability']}
-    except Exception, e:
+    except Exception as e:
         return {'success': False,
                 'message': "Could not add releasability: %s" % e}
 
@@ -522,7 +539,7 @@ def add_releasability_instance(type_, _id, name, analyst, note=None):
         obj.reload()
         return {'success': True,
                 'obj': obj.to_dict()['releasability']}
-    except Exception, e:
+    except Exception as e:
         return {'success': False,
                 'message': "Could not add releasability instance: %s" % e}
 
@@ -553,7 +570,7 @@ def remove_releasability_instance(type_, _id, name, date, analyst):
         obj.reload()
         return {'success': True,
                 'obj': obj.to_dict()['releasability']}
-    except Exception, e:
+    except Exception as e:
         return {'success': False,
                 'message': "Could not remove releasability instance: %s" % e}
 
@@ -582,7 +599,7 @@ def remove_releasability(type_, _id, name, analyst):
         obj.reload()
         return {'success': True,
                 'obj': obj.to_dict()['releasability']}
-    except Exception, e:
+    except Exception as e:
         return {'success': False,
                 'message': "Could not remove releasability: %s" % e}
 
@@ -774,7 +791,7 @@ def source_add_update(type_, id_, action_type, source, method='',
         return {'success': False,
                 'message': ('Could not make source changes. '
                             'Refresh page and try again.')}
-    except (ValidationError, TypeError), e:
+    except (ValidationError, TypeError) as e:
         return {'success':False, 'message': e}
 
 def source_remove(type_, id_, name, date, user=None, **kwargs):
@@ -804,7 +821,7 @@ def source_remove(type_, id_, name, date, user=None, **kwargs):
                                    date=date)
         obj.save(username=user)
         return result
-    except (ValidationError, TypeError), e:
+    except (ValidationError, TypeError) as e:
         return {'success':False, 'message': e}
 
 def source_remove_all(obj_type, obj_id, name, analyst=None):
@@ -831,7 +848,7 @@ def source_remove_all(obj_type, obj_id, name, analyst=None):
                                    remove_all=True)
         obj.save(username=analyst)
         return result
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success':False, 'message': e}
 
 def get_sources(obj_type, obj_id, analyst):
@@ -1403,7 +1420,7 @@ def modify_source_access(analyst, data):
     try:
         user.save(username=analyst)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False,
                 'message': format_error(e)}
 
@@ -1532,7 +1549,7 @@ def do_add_preferred_actions(obj_type, obj_id, username):
 
     try:
         obj.save(username=username)
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
     return {'success': True, 'object': actions}
@@ -1583,7 +1600,7 @@ def generate_regex(val):
 
     try:
         return {'$regex': re.compile('%s' % remove_quotes(val), re.I)}
-    except Exception, e:
+    except Exception as e:
         return {'error': 'Invalid Regular Expression: %s\n\n\t%s' % (val,
                                                                         str(e))}
 
@@ -1938,7 +1955,7 @@ def check_query(qparams,user,obj):
         except:
             field = key
         # Check for mapping, reverse because we're going the other way
-        invmap = dict((v,k) for k, v in obj._db_field_map.iteritems())
+        invmap = dict((v,k) for k, v in obj._db_field_map.items())
         if field in invmap:
             field = invmap[field]
         # Only allow query keys that exist in the object
@@ -1965,6 +1982,21 @@ def check_query(qparams,user,obj):
                     del newquery[key]
     return newquery
 
+# @do_cprofile
+# def count_me(col_obj, query):
+#     return col_obj.objects(__raw__=query).count()
+# @do_cprofile
+# def count_aspm(col_obj, query):
+#     return col_obj._get_collection().count(query)
+
+# @do_cprofile
+# def query_me(col_obj, query):
+#     return col_obj.objects(__raw__=query)
+
+# @do_cprofile
+# def query_aspm(col_obj, query):
+#     return col_obj._get_collection().find_one(query)
+#@do_cprofile
 def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                projection=[], excludes=[], count=False):
     """
@@ -1994,23 +2026,36 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     results['count'] = 0
     results['msg'] = ""
     results['crits_type'] = col_obj._meta['crits_type']
+    col = col_obj._get_collection()
     sourcefilt = user_sources(user)
-    if isinstance(sort,basestring):
+    if isinstance(sort, str):
         sort = sort.split(',')
-    if isinstance(projection,basestring):
+    if isinstance(projection, str):
         projection = projection.split(',')
+    #if not projection:
+    #    try:
+    #        projection = col_obj._meta['jtable_opts']['fields']
+    #    except KeyError:
+    #        projection = []
+    
+    pro = {}
+    for i in projection:
+        pro[i] = 1
     if not projection:
         projection = []
-# This could reduce fields when projection is Null 
-#        try:
-#            projection = col_obj._meta['jtable_opts']['fields']
-#        except KeyError:
-#            projection = []
+    if projection:
+        pro['schema_version'] = 1
+    else:
+        pro = None
+
     docs = None
     try:
         if not issubclass(col_obj,CritsSourceDocument): 
+            results['count'] = col.find(query).count()
             if count:
-                results['count'] = col_obj.objects(__raw__=query).as_pymongo().count()
+                
+                #results['count'] = col_obj.objects(__raw__=query).count()#.count()
+                #print("count: {0}".format(results['count']))
                 results['result'] = "OK"
                 return results
             if col_obj._meta['crits_type'] == 'User':
@@ -2037,23 +2082,39 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                 if user.check_dict_source_tlp(r):
                     filterlist.append(str(r['_id']))
             results['count'] = len(filterlist)
+            #print ("query3a result count: %d" % results['count'])
             if count:
                 results['result'] = "OK"
                 return results
-
+            print("dq: skip:{0} limit:{1}".format(skip,limit))
             docs = col_obj.objects.filter(id__in=filterlist).\
                                             order_by(*sort).skip(skip).\
-                                            only(*projection).limit(limit)
-
+                                            only(*projection).limit(1)
+            lqs =[]
+            #from itertools import chain
+            #none_qs = col_obj.objects.none()
+            res2 = col.find(query, pro).sort(sort).skip(skip).limit(limit)
+            for r in res2:
+                #lqs.append(col_obj._from_son(r))
+                lqs.append(r)
+            #docs = list(chain(docs, lqs))
+            #results['count'] = len(docs)
+            results['data2'] = lqs
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
                 doc.sanitize_sources(username="%s" % user, sources=sourcefilt)
-
-    except Exception, e:
+                #print ("query3 final results: %s" % repr(docs))
+                #print ("query3 results: %s" % repr(doc))
+        #print ("repr docs : %s\r\n" % repr(docs))
+        #print ("repr docs2 : %s\r\n" % repr(docs2))
+    except Exception as e:
+        logger.error("data_query(): {0}".format(e))
         results['msg'] = "ERROR: %s. Sort performed on: %s" % (e,
                                                                ', '.join(sort))
         return results
+    #results['count'] = len(lqs)
     results['data'] = docs
+    
     results['result'] = "OK"
     return results
 
@@ -2115,7 +2176,7 @@ def parse_query_request(request,col_obj):
                 base = field
                 extra = ""
             # Check for mapping, reverse because we're going the other way
-            invmap = dict((v,k) for k, v in col_obj._db_field_map.iteritems())
+            invmap = dict((v,k) for k, v in col_obj._db_field_map.items())
             if base in invmap:
                 base = invmap[base]
             # Only allow query keys that exist in the object
@@ -2199,7 +2260,7 @@ def get_query(col_obj,request):
         otype = request.GET.get('otype', None)
         if otype:
             search_type = search_type + "_" + otype
-        term = HTMLParser.HTMLParser().unescape(term)
+        term = html.parser.html.parser().unescape(term)
         qdict = gen_global_query(col_obj,
                                  request.user.username,
                                  term,
@@ -2323,16 +2384,21 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
             return {'Result': "ERROR", 'Message': response['msg']}
         response['crits_type'] = col_obj._meta['crits_type']
         # Escape term for rendering in the UI.
-        response['term'] = cgi.escape(term)
-        response['data'] = response['data'].to_dict(excludes, includes)
+        response['term'] = html.escape(term)
+        
         # Convert data_query to jtable stuff
-        response['Records'] = response.pop('data')
+        if response['data2']:
+            response['Records'] = response.pop('data2')
+        else:
+            response['data'] = response['data'].to_dict(excludes, includes)
+            response['Records'] = response.pop('data')
         response['TotalRecordCount'] = response.pop('count')
         response['Result'] = response.pop('result')
-
+        #print('repr resp {0}'.format(repr(response['Records'])))
         acl = get_acl_object(col_obj._meta['crits_type'])
 
         for doc in response['Records']:
+            print('repr doc: {0}'.format(repr(doc)))
             for key, value in doc.items():
                 # all dates should look the same
                 if isinstance(value, datetime.datetime):
@@ -3714,7 +3780,7 @@ def generate_global_search(request):
             formatted_query = resp['query']
             term = resp['term']
             urlparams = resp['urlparams']
-
+            # get count
             resp = data_query(col_obj, request.user, query=formatted_query, count=True)
             results.append({'count': resp['count'],
                             'url': url,
@@ -4042,7 +4108,7 @@ def ticket_add(type_, id_, ticket, user, **kwargs):
                              ticket['date'])
         obj.save(username=user)
         return {'success': True, 'object': ticket}
-    except (ValidationError, TypeError, KeyError), e:
+    except (ValidationError, TypeError, KeyError) as e:
         return {'success': False, 'message': e}
 
 def ticket_update(type_, id_, ticket, user=None, **kwargs):
@@ -4075,7 +4141,7 @@ def ticket_update(type_, id_, ticket, user=None, **kwargs):
                         ticket['date'])
         obj.save(username=user)
         return {'success': True, 'object': ticket}
-    except (ValidationError, TypeError, KeyError), e:
+    except (ValidationError, TypeError, KeyError) as e:
         return {'success': False, 'message': e}
 
 
@@ -4105,7 +4171,7 @@ def ticket_remove(type_, id_, date, user, **kwargs):
         obj.delete_ticket(date)
         obj.save(username=user)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def unflatten(dictionary):
@@ -4118,7 +4184,7 @@ def unflatten(dictionary):
     """
 
     resultDict = dict()
-    for key, value in dictionary.iteritems():
+    for key, value in dictionary.items():
         parts = key.split(".")
         d = resultDict
         for part in parts[:-1]:

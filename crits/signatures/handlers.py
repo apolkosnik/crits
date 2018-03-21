@@ -1,7 +1,7 @@
 import datetime
 import hashlib
 import json
-import HTMLParser
+import html.parser
 
 try:
     from django.urls import reverse
@@ -493,7 +493,7 @@ def update_signature_type(type_, id_, data_type, user, **kwargs):
         try:
             signature.save(username=user.username)
             return {'success': True}
-        except ValidationError, e:
+        except ValidationError as e:
             return {'success': False, 'message': str(e)}
 
 
@@ -632,7 +632,7 @@ def update_dependency(type_, id_, dep, user, append=False, **kwargs):
 
         obj.save(username=user.username)
         return {'success': True, 'message': "Data type dependency set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 
@@ -672,7 +672,7 @@ def update_min_version(type_, id_, data_type_min_version, user, **kwargs):
         obj.data_type_min_version = data_type_min_version
         obj.save(username=user.username)
         return {'success': True, 'message': "Data type min version set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 
@@ -711,7 +711,7 @@ def update_max_version(type_, id_, data_type_max_version, user, **kwargs):
         obj.data_type_max_version = data_type_max_version
         obj.save(username=user.username)
         return {'success': True, 'message': "Data type max version set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 
@@ -763,7 +763,7 @@ def update_signature_data(type_, id_, data, user, **kwargs):
         obj.data = data
         obj.save(username=user.username)
         return {'success': True, 'message': "Signature value updated."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def update_title(type_, id_, title, user, **kwargs):
@@ -801,5 +801,5 @@ def update_title(type_, id_, title, user, **kwargs):
         obj.title = data
         obj.save(username=title)
         return {'success': True, 'message': "Signature title updated."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}

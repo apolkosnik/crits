@@ -29,7 +29,8 @@ pydeep>=0.2
 pymongo
 pyparsing
 python-dateutil
-python-ldap
+#python-ldap
+ldap3
 python-magic>=0.4.6
 python-mimeparse
 pytz
@@ -39,7 +40,7 @@ setuptools>=28.3.0
 simplejson
 six
 ushlex
-wsgiref
+#wsgiref
 olefile
 pycrypto
 pyimpfuzzy

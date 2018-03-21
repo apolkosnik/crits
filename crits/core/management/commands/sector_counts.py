@@ -35,7 +35,8 @@ class Command(BaseCommand):
                         sectors[sector][otype] += 1
 
         # Drop all existing sectors
-        Sector.objects().delete_one()
+        #Sector.objects().delete_one()
+        Sector.objects.deleteOne()
 
         for sector in sectors.values():
             sector.save()
