@@ -2607,7 +2607,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
             elif not url:
                 doc['url'] = None
             else:
-                doc['url'] = reverse(url, args=(unicode(doc[urlfieldparam]),))
+                doc['url'] = reverse(url, args=(doc[urlfieldparam],))
     return response
 
 def jtable_ajax_delete(obj,request):

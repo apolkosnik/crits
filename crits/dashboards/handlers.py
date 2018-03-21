@@ -210,14 +210,14 @@ def parseDocObjectsToStrings(records, obj_type):
     entire object
     """
     for doc in records:
-        for key, value in doc.items():
+        for key, value in list(doc.items()):
             # all dates should look the same
 
             if isinstance(value, datetime.datetime):
                 doc[key] = datetime.datetime.strftime(value,
                                                       "%Y-%m-%d %H:%M:%S")
             if key == "_id" or key == "id":
-                doc["recid"] = str(value)
+                #doc["recid"] = str(value)
                 doc["details"] = "<a href='"+getHREFLink(doc, obj_type)+"'>"\
                     "<div class='icon-container'>"\
                         "<span class='ui-icon ui-icon-document'></span>"\
