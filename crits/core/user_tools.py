@@ -10,7 +10,8 @@ from crits.core.totp import gen_user_secret
 from django.conf import settings
 #from django.contrib.auth.views import logout_then_login
 
-from crits.vocabulary.acls import GeneralACL
+#from crits.vocabulary.acls import GeneralACL
+from crits.vocabulary.acls import *
 
 from crits.vocabulary.acls import *
 
@@ -65,6 +66,7 @@ def user_sources(user=None):
 
 
 def get_acl_object(crits_type):
+    #from crits.vocabulary.acls import *
     if crits_type == 'Actor':
         return ActorACL
     elif crits_type == 'Backdoor':

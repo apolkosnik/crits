@@ -130,8 +130,9 @@ def getRecordsForDefaultDashboardTable(user, tableName):
     elif tableName == "Counts":
         response = generate_counts_jtable(None, "jtlist")
         records = json.loads(response.content)["Records"]
-        for record in records:
-            record["recid"] = record.pop("id")
+# done via mapping in data_query
+#        for record in records:
+#            record["recid"] = record.pop("id")
         return records
     else:
         # This only happens if we have a dashboard which is no longer valid.
@@ -139,8 +140,8 @@ def getRecordsForDefaultDashboardTable(user, tableName):
         # dashboard is no longer valid. Produce an "empty" response.
         response = {'data': []}
         obj_type = None
-
-    return parseDocumentsForW2ui(response, obj_type)
+    return parseDocObjectsToStrings(response.pop('data'), obj_type)
+    #return parseDocumentsForW2ui(response, obj_type)
 
 def constructSavedTable(table, records):
     """
@@ -187,6 +188,7 @@ def constructTable(table, records, columns, colNames):
                                           kwargs={"obj":table.objType})
     return tableObject
 
+
 def parseDocumentsForW2ui(response, obj_type):
     """
     called by getRecordsForDeafultDashboardTable in order to turn the BSON objects
@@ -195,8 +197,9 @@ def parseDocumentsForW2ui(response, obj_type):
     """
     records = []
     #create a list of dicts
-    for record in response["data"]:
-        records.append(record.to_mongo())
+    #for record in response["data"]:
+    #    records.append(record) #.to_mongo())
+    records = response.pop('data')
     return parseDocObjectsToStrings(records, obj_type)
 
 def parseDocObjectsToStrings(records, obj_type):
@@ -483,7 +486,7 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
     response['crits_type'] = obj_type
     # Escape term for rendering in the UI.
     response['term'] = cgi.escape(term)
-    response['data'] = response['data'].to_dict(excludes, includes)
+    #response['data'] = response['data']#.to_dict(excludes, includes)
     response['Records'] = parseDocObjectsToStrings(response.pop('data'), obj)
     response['TotalRecordCount'] = response.pop('count')
     response['Result'] = response.pop('result')
