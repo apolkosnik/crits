@@ -200,7 +200,6 @@ else:
     connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL,
             replicaset=MONGO_REPLICASET)
 
-# Get config from DB via pymongo
 def connect_pymongo(dbs=MONGO_DATABASE, dbhost=MONGO_HOST, dbport=MONGO_PORT, dbuser=MONGO_USER, dbpass=MONGO_PASSWORD, dbssl=MONGO_SSL, w=1):
     from pymongo import version_tuple as pymongo_versiont
     if pymongo_versiont >= (3,0):
@@ -212,8 +211,17 @@ def connect_pymongo(dbs=MONGO_DATABASE, dbhost=MONGO_HOST, dbport=MONGO_PORT, db
         dbase.authenticate(dbuser, dbpass)
     return dbase
 
+# Services can run in either multiprocessing or multithreading mode 
+# (depending on config option), so you might want to to call 
+# settings.connect_mongo() if multiprocessing is used and
+# re-use settings.PYDB handle if in multithreaded mode. 
+# http://api.mongodb.com/python/current/faq.html#using-pymongo-with-multiprocessing
+
+# Establish persistent pymongo connection, it is used by
+# mongo_connector() and gridfs_connector() in core/mongo_tools.py
 PY_DB = connect_pymongo(MONGO_DATABASE, MONGO_HOST, MONGO_PORT, MONGO_USER, MONGO_PASSWORD, MONGO_SSL, 1)
 
+# Get config from DB via pymongo
 coll = PY_DB[COL_CONFIG]
 crits_config = coll.find_one({})
 if not crits_config:
