@@ -4,6 +4,21 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: apolkosnik
+Date:   2018-03-24
+
+    mongo_connector() and gridfs_connector() in core/mongo_tools.py are now
+    using pooled persistent connection to MongoDB rather than establising a
+    connection every time they are called.
+    There might be an implication for services, as they can run in either 
+    a multiprocessing or multithreading mode (depending on config option),
+    so you might want to to call settings.connect_mongo() if multiprocessing
+    is used and re-use settings.PYDB handle if in multithreaded mode.
+    See the relevant pymongo documentation for details:
+    http://api.mongodb.com/python/current/faq.html#using-pymongo-with-multiprocessing
+
+
+
+Author: apolkosnik
 Date:   2018-03-10
 
     Django 1.11.x support has arrived, but it will also require some changes
