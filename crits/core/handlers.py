@@ -2191,11 +2191,11 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
             query2 = query
             query2['source.name'] = {'$in': sourcefilt}
             # count via pymongo
-            #results['count'] = col.find(query2).count()
+            results['count'] = col.find(query2).count()
             # count via pymongo and  aggregation pipeline
-            for i in col.aggregate([{'$match': query2 }, { '$group':{'_id':"uniqueDocs",'count':{'$sum':1}}} ], cursor={}):
-                #print('count1: {0}'.format(repr(i))) 
-                results['count'] = i['count']
+            #for i in col.aggregate([{'$match': query2 }, { '$group':{'_id':"uniqueDocs",'count':{'$sum':1}}} ], cursor={}):
+            #    #print('count1: {0}'.format(repr(i))) 
+            #    results['count'] = i['count']
             #https://jira.mongodb.org/browse/SERVER-3645
             #Interestingly, an aggregation counting the documents returns the correct value:
             #db.collection.aggregate({$group:{_id:"uniqueDocs",count:{$sum:1}}})
