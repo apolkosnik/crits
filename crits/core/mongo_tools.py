@@ -23,8 +23,7 @@ class MongoError(Exception):
 def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
     Connect to the mongo database if you need to use PyMongo directly and not
-    use MongoEngine. Uses pooled connection created in settings.py rather than
-    opening a fresh connection every call.
+    use MongoEngine.
 
     :param collection: the collection to use.
     :type collection: str
@@ -33,19 +32,31 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     :returns: :class:`pymongo.MongoClient`,
               :class:`crits.core.mongo_tools.MongoError`
     """
-
     try:
-        return settings.PY_DB[collection]
+        if settings.SERVICE_MODEL.startswith('process'):
+            logger.info('PROCESS_MODE')
+            connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
+                                            settings.MONGO_PORT,
+                                            read_preference=preference,
+                                            ssl=settings.MONGO_SSL,
+                                           w=1)#, connect=False)
+            db = connection[settings.MONGO_DATABASE]
+            if settings.MONGO_USER:
+                db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
+            return db[collection]
+        else:
+            return settings.PY_DB[collection]
+    except pymongo.errors.ConnectionFailure as e:
+        raise MongoError("Error connecting to Mongo database: %s" % e)
+    except KeyError as e:
+        raise MongoError("Unknown database or collection: %s" % e)
     except Exception as e:
         raise MongoError("MongoError: %s" % e)
 
 def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
     Connect to the mongo database if you need to use PyMongo directly and not
-    use MongoEngine. Uses pooled connection created in settings.py rather than
-    opening a fresh connection every call.
-    
-    Used specifically for accessing GridFS.
+    use MongoEngine. Used specifically for accessing GridFS.
 
     :param collection: the collection to use.
     :type collection: str
@@ -54,9 +65,25 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     :returns: :class:`gridfs.GridFS`,
               :class:`crits.core.mongo_tools.MongoError`
     """
-
     try:
-        return gridfs.GridFS(settings.PY_DB, collection)
+        # w=0 writes to GridFS are now prohibited.
+        #if pymongo.version_tuple >=(3,0):
+        if settings.SERVICE_MODEL.startswith('process'):
+            connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
+                                            settings.MONGO_PORT,
+                                            read_preference=preference,
+                                            ssl=settings.MONGO_SSL,
+                                            w=1)#, connect=False)
+            db = connection[settings.MONGO_DATABASE]
+            if settings.MONGO_USER:
+                db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
+            return gridfs.GridFS(db, collection)
+        else:
+            return gridfs.GridFS(settings.PY_DB, collection)
+    except pymongo.errors.ConnectionFailure as e:
+        raise MongoError("Error connecting to Mongo database: %s" % e)
+    except KeyError as e:
+        raise MongoError("Unknown database: %s" % e)
     except Exception as e:
         raise MongoError("MongoError: %s" % e)
 
