@@ -2050,82 +2050,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
         pro[i] = 1
     if not projection:
         projection = []
-
-    if isinstance(excludes, str):
-        excludes = excludes.split(',')
-    if not excludes:
-        excludes = []
-
-    if results['crits_type'] != 'AuditLog':
-        pro = {}
-        #print('fields1: {0}'.format(projection))
-        #This is how mongoengine 0.15 does it... 0.8.x's code is problematic
-        doc_fields = col_obj._fields
-        _db_field_map = {k: getattr(v, 'db_field', k)
-                                  for k, v in doc_fields.items()}
-        for i in projection:
-            #print("i: {0}".format(i))
-            k = _db_field_map[i]
-            if i == k:
-                pro[i] = 1
-            else:
-                #print("projection mapping: {0} <- db:{1}".format(i, k))
-                #print("{0}:{1}".format(i, k))
-                kk = '$'+k                
-                pro[i] = kk # map the db_field to field
-                pro[k] = kk # map also the db_field
-                if i == 'id':
-                    # map it for w2ui
-                    pro['recid'] = kk
-
-        for i in excludes:
-            pro.pop(i, None)
-
-
-        if not pro:
-            # empty projection... we need to map some fields
-            #print('fields2: {0}'.format(col_obj._fields))
-            for i in col_obj._fields:
-                #print("i: {0}".format(i))
-                #k = col_obj._db_field_map[i]
- 
-                k = _db_field_map[i]
-                if i == k:
-                    pro[i] = 1
-                else:
-                    #print("projecting all fields mapping: {0} <- db:{1}".format(i, k)) 
-                    kk = '$'+k
-                    pro[i] = kk   # get all the fields
-                    pro[k] = kk   # map also the db_field
-                    if i == 'id':
-                        #map it for w2ui
-                        pro['recid'] = kk
-    else:
-        # For AuditLog
-        pro = None
-    
-    if pro:
-        # slap on when projection/exclusion is not empty
-        pro['schema_version'] = 1
-        pro['unsupported_attrs'] = 1
-
-    #print('pro: {0}'.format(repr(pro)))
-
-    srt = []
-    for i in sort:
-        if i[0] == '-':
-           t = (i[1:], -1)
-           srt.append(t)
-        elif i[0] == '+':
-           t = (i[1:], 1)
-           srt.append(t)
-        else:
-           t = (i, 1)
-           srt.append(t)
-    if not srt:
-        srt=[("$natural", 1)]
-
-    # Setup for pymongo-direct queries
+    # It came from: https://stackoverflow.com/questions/12068558/use-mongoengine-and-pymongo-together
     col = col_obj._get_collection()
 
     docs = None
@@ -2186,50 +2111,27 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
         # Else, all other objects that have sources associated with them
         # need to be filtered appropriately for source access and TLP access
         else:
-            fily = {'tlp':1,'source':1, 'id':1}
-            filterlist = []
-            query2 = query
-            query2['source.name'] = {'$in': sourcefilt}
-            # count via pymongo
-            results['count'] = col.find(query2).count()
-            # count via pymongo and  aggregation pipeline
-            #for i in col.aggregate([{'$match': query2 }, { '$group':{'_id':"uniqueDocs",'count':{'$sum':1}}} ], cursor={}):
-            #    #print('count1: {0}'.format(repr(i))) 
-            #    results['count'] = i['count']
-            #https://jira.mongodb.org/browse/SERVER-3645
-            #Interestingly, an aggregation counting the documents returns the correct value:
-            #db.collection.aggregate({$group:{_id:"uniqueDocs",count:{$sum:1}}})
-
-
-
-            resy = col.find(query2, fily) #.sort(srt)
-            for r in resy:
-                if user.check_dict_source_tlp(r):
-                    #print('r: {0}'.format(r))
-                    filterlist.append(r.get('_id', None))
-            
+            #fily = {'id': 1, 'tlp':1,'source':1}
+            #filterlist = []
+            #query['source.name'] = {'$in': sourcefilt}
+            #resy = col.find(query, fily).sort(*sort)
+            #for r in resy:
+            #    if user.check_dict_source_tlp(r):
+            #        filterlist.append(str(r['_id']))
             #results['count'] = len(filterlist)
-            #print('filterlist: {0}'.format(filterlist))
-            #print('count3: {0}'.format(results['count'])) 
+            #if count:
+            #    results['result'] = "OK"
+            #    return results
+
+            #docs = col_obj.objects.filter(id__in=filterlist).\
+            tlp_filter_query = user.filter_dict_source_tlp(query)
+            docs = col_obj.objects.filter(__raw__=tlp_filter_query).\
+                                            order_by(*sort).skip(skip).\
+                                            only(*projection).limit(limit)
+            results['count'] = docs.count()
             if count:
                 results['result'] = "OK"
                 return results
-            #print('filterlist: {0}'.format(repr(filterlist)))
-            #docs = col_obj.objects.filter(id__in=filterlist).\
-            #                                order_by(*sort).skip(skip).\
-            #                                only(*projection).limit(limit)
-            #flist = []
-            #for i in filterlist:
-            #    flist.append(ObjectId(i))
-            #flist2 = (',').join(flist)
-            #print('filterlist: {0}'.format(repr(filterlist)))
-            flist3 = { '_id': {'$in':  filterlist }}
-            #print('flist3: {0} projection:{1}'.format(repr(flist3), repr(pro)))
-            #docs = list(col.find(flist3, projection=pro).sort(srt).skip(skip).limit(limit))
-            docs = list(col.aggregate([{ '$project' : pro},{ '$match': flist3}, {'$skip': skip}, {'$sort': SON(srt)}, {'$limit': limit}], cursor={} ))
-            #docs = list(docz3)
-            #for i in docs:
-                #print("doc3: {0}\r\n".format(repr(i)))
 
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
@@ -2244,7 +2146,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     results['result'] = "OK"
     return results
 
-def csv_query(col_obj,user,fields=[],limit=10000,skip=0,sort=[],query={}):
+def csv_query(col_obj,user,fields=[],limit=0,skip=0,sort=[],query={}):
     """
     Runs query and returns items in CSV format with fields as row headers
 
@@ -2263,6 +2165,15 @@ def csv_query(col_obj,user,fields=[],limit=10000,skip=0,sort=[],query={}):
     :param query: MongoDB query
     :type query: dict
     """
+
+    # Use maximum row count from config if an invalid value is given
+    crits_config = CRITsConfig.objects().first()
+    if crits_config:
+        csv_max = crits_config.csv_max
+    else:
+        csv_max = 25000 # Arbitrary Default
+    if not isinstance(limit, int) or limit < 1 or limit > csv_max:
+        limit = csv_max
 
     results = data_query(col_obj, user=user, limit=limit,
                               skip=skip, sort=sort, query=query,
@@ -2311,7 +2222,7 @@ def parse_query_request(request,col_obj):
 
         resp['fields'] = goodfields
     resp['sort'] = request.GET.get('sort',[])
-    resp['limit'] = int(request.GET.get('limit',10000))
+    resp['limit'] = int(request.GET.get('limit', 0))
     resp['skip'] = int(request.GET.get('skip',0))
     return resp
 
@@ -2336,7 +2247,7 @@ def csv_export(request, col_obj, query={}):
             response = render(request, "error.html", {"error": resp['Message'] })
             return response
         query = resp['query']
-    result = csv_query(col_obj, request.user.username, fields=opts['fields'],
+    result = csv_query(col_obj, request.user, fields=opts['fields'],
                         sort=opts['sort'], query=query, limit=opts['limit'],
                         skip=opts['skip'])
     if isinstance(result, str):

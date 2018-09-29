@@ -19,6 +19,7 @@ class CRITsConfig(CritsDocument, Document):
 
     meta = {
         "collection": settings.COL_CONFIG,
+        "auto_create_index": False,
         "crits_type": 'Config',
         "latest_schema_version": 1,
         "schema_doc": {
@@ -37,6 +38,7 @@ class CRITsConfig(CritsDocument, Document):
     # for historical reasons.
     crits_version = StringField(required=True,
                                 default=settings.CRITS_VERSION)
+    csv_max = IntField(default=25000)
     debug = BooleanField(default=True)
     enable_dt = BooleanField(default=False)
     depth_max = IntField(default=10)
