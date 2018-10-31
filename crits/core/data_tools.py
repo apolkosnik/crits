@@ -1,3 +1,7 @@
+from __future__ import unicode_literals
+from builtins import chr
+from builtins import str
+from builtins import range
 import tempfile, shutil
 import os
 import re
@@ -37,7 +41,7 @@ def get_file_fs(sample_md5):
         data = fin.read()
         fin.close()
     except Exception as e:
-        raise "error: %s"
+        raise Exception("error: %s" % e)
     return data
 
 def put_file_fs(data):
@@ -62,7 +66,7 @@ def put_file_fs(data):
         fout.write(data)
         fout.close()
     except Exception as e:
-        raise "error: %s"
+        raise Exception("error: %s" %e)
     return sample_md5
 
 def create_zip(files, pw_protect=True):
@@ -153,7 +157,7 @@ def create_zip(files, pw_protect=True):
     except Exception as ex:
         errmsg = ""
         for err in ex.args:
-            errmsg = errmsg + " " + unicode(err)
+            errmsg = errmsg + " " + str(err)
         raise ZipFileError(errmsg)
     finally:
         if os.path.isdir(dumpdir):
@@ -208,7 +212,7 @@ def convert_datetimes_to_string(obj):
     if isinstance(obj, datetime.datetime):
         return datetime.datetime.strftime(obj, settings.PY_DATETIME_FORMAT)
     elif isinstance(obj, list) or isinstance(obj, dict):
-        for idx in (xrange(len(obj)) if isinstance(obj, list) else obj.keys()):
+        for idx in (range(len(obj)) if isinstance(obj, list) else obj.keys()):
             obj[idx] = convert_datetimes_to_string(obj[idx])
 
     return obj
@@ -395,17 +399,17 @@ def make_stackstrings(md5=None, data=None):
     prev = 0
     strings = ''
     while x < len(data):
-        if (data[x] == '\xc6') and ((data[x+1] == '\x45') or (data[x+1] == '\x84')):
+        if (data[x] == b'\xc6') and ((data[x+1] == b'\x45') or (data[x+1] == b'\x84')):
             a = ord(data[x+3])
             if (a <= 126 and a >= 32) or (a==9): strings += data[x+3]
             prev = x
             x += 4
-        elif (data[x] == '\xc6') and (data[x+1] == '\x44'):
+        elif (data[x] == b'\xc6') and (data[x+1] == b'\x44'):
             a = ord(data[x+4])
             if (a <= 126 and a >= 32) or (a==9): strings += data[x+4]
             prev = x
             x += 5
-        elif (data[x] == '\xc6') and ((data[x+1] == '\x05') or (data[x+1] == '\x85')):
+        elif (data[x] == b'\xc6') and ((data[x+1] == b'\x05') or (data[x+1] == b'\x85')):
             a = ord(data[x+6])
             if (a <= 126 and a >= 32) or (a==9): strings += data[x+6]
             prev = x
@@ -413,7 +417,7 @@ def make_stackstrings(md5=None, data=None):
         else:
             if ((x - prev) ==12): strings += '\n'
             x += 1
-    strings = strings.replace('\x00', '\r')
+    strings = strings.replace(b'\x00', '\r')
     return strings
 
 def make_hex(md5=None, data=None):
@@ -431,8 +435,8 @@ def make_hex(md5=None, data=None):
         data = get_file(md5)
     length = 16
     hex_data = ''
-    digits = 4 if isinstance(data, unicode) else 2
-    for i in xrange(0, len(data), length):
+    digits = 4 if isinstance(data, str) else 2
+    for i in range(0, len(data), length):
         s = data[i:i+length]
         hexa = ' '.join(["%0*X" % (digits, ord(x))  for x in s])
         text = ' '.join([x if 0x20 <= ord(x) < 0x7F else '.'  for x in s])
