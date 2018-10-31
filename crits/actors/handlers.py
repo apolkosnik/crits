@@ -224,7 +224,7 @@ def get_actor_details(id_, user):
     """
 
     username = user.username
-    allowed_sources = user_sources(username)
+    allowed_sources = user_sources(user)
     actor = Actor.objects(id=id_, source__name__in=allowed_sources).first()
     template = None
     args = {}
