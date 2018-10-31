@@ -50,7 +50,7 @@ def get_certificate_details(md5, user):
     """
 
     template = None
-    sources = user_sources(user.username)
+    sources = user_sources(user)
     cert = Certificate.objects(md5=md5, source__name__in=sources).first()
 
     if not user.check_source_tlp(cert):
