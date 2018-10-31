@@ -2002,7 +2002,6 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                projection=[], excludes=[], count=False):
     """
     Basic query function
-
     :param col_obj: MongoEngine collection object (Required)
     :type col_obj: :class:`crits.core.crits_mongoengine.CritsDocument`
     :param user: CRITs user (Required)
@@ -2019,95 +2018,42 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     :type projection: list
     :param excludes: fields to exclude from query results
     :type excludes: list
-    :param count: get the count
-    :type count: bool
     :returns: dict -- Keys are result, data, count, msg, crits_type.  'data'
         contains a :class:`crits.core.crits_mongoengine.CritsQuerySet` object.
     """
-    #print('data_query(): col_obj:{0}, user:{1}, limit:{2}, skip:{3}, sort:{4}, query:{5}, projection:{6}, excludes:{7}, count:{8}\r\n'.format(repr(col_obj),\
-    #    repr(user),repr(limit),repr(skip),repr(sort),repr(query),repr(projection), repr(excludes), count))
-            
-    # Inspiration for speeding up with pymongo came from: https://stackoverflow.com/questions/12068558/use-mongoengine-and-pymongo-together
     results = {'result':'ERROR'}
     results['data'] = []
     results['count'] = 0
     results['msg'] = ""
     results['crits_type'] = col_obj._meta['crits_type']
-    col = col_obj._get_collection()
     sourcefilt = user_sources(user)
     if isinstance(sort, str):
         sort = sort.split(',')
     if isinstance(projection, str):
         projection = projection.split(',')
-    #if not projection:
-    #    try:
-    #        projection = col_obj._meta['jtable_opts']['fields']
-    #    except KeyError:
-    #        projection = []
-    
-    pro = {}
-    for i in projection:
-        pro[i] = 1
     if not projection:
         projection = []
+
     # It came from: https://stackoverflow.com/questions/12068558/use-mongoengine-and-pymongo-together
     col = col_obj._get_collection()
 
     docs = None
     try:
         if not issubclass(col_obj,CritsSourceDocument):
-            #count via mongoengine
-            #results['count'] = col_obj.objects(__raw__=query).count()
- 
-            #count via pymongo
             results['count'] = col.find(query).count()
- 
-            # count via pymongo and  aggregation pipeline
-            #for i in col.aggregate([{'$match': query }, { '$group':{'_id':"uniqueDocs",'count':{'$sum':1}}}]):
-            #    #print('count1: {0}'.format(repr(i['count']))) 
-            #    results['count'] = i['count']
-            #https://jira.mongodb.org/browse/SERVER-3645
-            #Interestingly, an aggregation counting the documents returns the correct value:
-            #db.collection.aggregate({$group:{_id:"uniqueDocs",count:{$sum:1}}})
-
-            #print('count1: {0}'.format(results['count'])) 
             if count:
                 results['result'] = "OK"
                 return results
-            if results['crits_type'] == 'User':
-                # users query, hide the treasures
-                #docs = col_obj.objects(__raw__=query).only(*projection).exclude('password',
-                #                              'password_reset',
-                #                              'api_keys').\
-                #                              order_by(*sort).skip(skip).\
-                #                              limit(limit)
- 
-                #remove sensitive fields from the result
-                if pro:
-                    pro2 = pro
-                    exc = ['password', 'password_reset', 'api_keys']
-                    for i in exc:
-                        pro2.pop(i, None)
-                #    if not pro2:
-                #        pro2 = None
-                    
-                #    print('query1a: {0} {1} {2} {3}'.format(repr(query), repr(pro2), repr(srt), repr(limit)))
-                #docs = list(col.find(query, projection=pro2).skip(skip).limit(limit))
-                docs = list(col.aggregate([{ '$project' : pro2},{ '$match': query}, {'$skip': skip}, {'$sort': SON(srt)}, {'$limit': limit} ], cursor={} ))
-                #for i in docs:
-                #    print("doc1: {0}\r\n".format(repr(i)))
+            if col_obj._meta['crits_type'] == 'User':
+                docs = col_obj.objects(__raw__=query).only(*projection).exclude('password',
+                                              'password_reset',
+                                              'api_keys').\
+                                              order_by(*sort).skip(skip).\
+                                              limit(limit)
             else:
-                #AuditLog, etc
-                #print('query1b {0} {1} {2} {3}'.format(repr(query), repr(pro), repr(srt), repr(limit)))
-                #docs = col_obj.objects(__raw__=query).\
-                #                order_by(*sort).\
-                #                skip(skip).limit(limit)
-                if results['crits_type'] == 'AuditLog':
-                    docs = list(col.find(query).sort(srt).skip(skip).limit(limit))
-                else:
-                    docs = list(col.aggregate([{ '$project' : pro}, {'$match': query}, {'$skip': skip}, {'$sort': SON(srt)}, {'$limit': limit} ], cursor={} ))
-                #for i in docs:
-                #    print("doc2: {0}\r\n".format(repr(i)))                  
+                    docs = col_obj.objects(__raw__=query).\
+                                    order_by(*sort).\
+                                    skip(skip).limit(limit)
         # Else, all other objects that have sources associated with them
         # need to be filtered appropriately for source access and TLP access
         else:
@@ -2138,11 +2084,10 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                 doc.sanitize_sources(username="%s" % user, sources=sourcefilt)
 
     except Exception as e:
-        results['msg'] = "Error in data_query(): %s." % e
+        results['msg'] = "ERROR: %s. Sort performed on: %s" % (e,
+                                                               ', '.join(sort))
         return results
-    #results['count'] = len(lqs)
     results['data'] = docs
-    
     results['result'] = "OK"
     return results
 
@@ -2423,9 +2368,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         response['crits_type'] = col_obj._meta['crits_type']
         # Escape term for rendering in the UI.
         response['term'] = html.escape(term)
-        
+        response['data'] = response['data'].to_dict(excludes, includes)
         # Convert data_query to jtable stuff
-        #response['data'] = response['data'].to_dict(excludes, includes)
         response['Records'] = response.pop('data')
         response['TotalRecordCount'] = response.pop('count')
         response['Result'] = response.pop('result')

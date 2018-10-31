@@ -1388,19 +1388,22 @@ def user_context(request):
     """
 
     context = {}
-    user = request.user
-    if not user.username:
-        # Get user theme
-        user = CRITsUser.objects(username=request.user.username).first()
-        if user:
-            context['theme'] = user.get_preference('ui', 'theme', 'default')
-            favorite_count = 0
-            favorites = user.favorites.to_dict()
-            for favorite in favorites.values():
-                favorite_count += len(favorite)
-            context['user_favorites'] = user.favorites.to_json()
-            context['favorite_count'] = favorite_count
-    else:
+    # Get user theme
+    user = CRITsUser.objects(username=request.user.username).first()
+    if user:
+    #user = request.user
+    #if not user.username:
+    #    # Get user theme
+    #    user = CRITsUser.objects(username=request.user.username).first()
+    #    if user:
+    #        context['theme'] = user.get_preference('ui', 'theme', 'default')
+    #        favorite_count = 0
+    #        favorites = user.favorites.to_dict()
+    #       for favorite in favorites.values():
+    #            favorite_count += len(favorite)
+    #        context['user_favorites'] = user.favorites.to_json()
+    #        context['favorite_count'] = favorite_count
+    #else:
         context['theme'] = user.get_preference('ui', 'theme', 'default')
         favorite_count = 0
         favorites = user.favorites.to_dict()
