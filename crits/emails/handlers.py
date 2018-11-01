@@ -155,7 +155,7 @@ def get_email_detail(email_id, user):
     """
 
     template = None
-    sources = user_sources(user.username)
+    sources = user_sources(user)
     email = Email.objects(id=email_id, source__name__in=sources).first()
 
     if not user.check_source_tlp(email):
