@@ -190,7 +190,7 @@ def get_indicator_details(indicator_id, user):
     """
 
     template = None
-    users_sources = user_sources(user.username)
+    users_sources = user_sources(user)
 
     indicator = Indicator.objects(id=indicator_id,
                                   source__name__in=users_sources).first()
@@ -1074,7 +1074,7 @@ def activity_add(id_, activity, user, **kwargs):
               "object" (dict) if successful.
     """
 
-    sources = user_sources(user.username)
+    sources = user_sources(user)
     indicator = Indicator.objects(id=id_,
                                   source__name__in=sources).first()
     if not indicator:
@@ -1111,7 +1111,7 @@ def activity_update(id_, activity, user=None, **kwargs):
               "object" (dict) if successful.
     """
 
-    sources = user_sources(user.username)
+    sources = user_sources(user)
     indicator = Indicator.objects(id=id_,
                                   source__name__in=sources).first()
     if not indicator:
