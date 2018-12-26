@@ -325,7 +325,7 @@ def get_dialog(request):
             dialog = 'error'
             params['error'] = "Dialog does not exist"
 
-    except Exception, e:
+    except Exception as e:
         dialog = 'error'
         params['error'] = 'Error preparing requested dialog'
         logger.warning("Dialog error: %s" % e)
