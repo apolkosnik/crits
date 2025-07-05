@@ -16,6 +16,9 @@ if settings.QUERY_CACHING:
 else:
     from mongoengine import QuerySetNoCache as QS
 
+from mongoengine import Document, EmbeddedDocument, DynamicDocument, DynamicEmbeddedDocument, StringField, IntField, ListField, DictField, BooleanField, DateTimeField
+from mongoengine.base import BaseDocument
+
 from pprint import pformat
 
 from crits.core.user_tools import user_sources
@@ -24,17 +27,14 @@ from crits.core.class_mapper import class_from_id, class_from_type
 from crits.vocabulary.relationships import RelationshipTypes
 from crits.vocabulary.objects import ObjectTypes
 
-# Hack to fix an issue with non-cached querysets and django-tastypie-mongoengine
-# The issue is in django-tastypie-mongoengine in resources.py from what I can
-# tell.
-
-QUERY_TERMS_ALL = getattr(mongoengine_tranform, 'MATCH_OPERATORS', (
+# Query operators for MongoEngine
+QUERY_TERMS_ALL = (
     'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'mod', 'all', 'size', 'exists',
     'not', 'within_distance', 'within_spherical_distance', 'within_box',
     'within_polygon', 'near', 'near_sphere', 'contains', 'icontains',
     'startswith', 'istartswith', 'endswith', 'iendswith', 'exact', 'iexact',
     'match'
-))
+)
 
 class Query(object):
     """

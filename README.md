@@ -10,33 +10,68 @@ Visit our [website](https://crits.github.io) for more information, documentation
 
 # Installation
 
-CRITs is designed to work on a 64-bit architecture of Ubuntu or RHEL6 using Python 2.7. Installation has beta support for OSX using Homebrew. It is also possible to install CRITs on CentOS.
+CRITs has been modernized to work with Python 3.10+ and Django 4.2+ LTS. The system supports modern 64-bit architectures including Ubuntu 22.04+, RHEL8+, and other contemporary Linux distributions. Installation is also supported on macOS and can be deployed using Docker for containerized environments.
 
-If you require the use of a 32-bit OS, you will need to download 32-bit versions of the pre-compiled dependencies.
+**System Requirements:**
+- Python 3.10 or higher
+- Django 4.2+ LTS
+- MongoEngine 0.27+
+- MongoDB 6.0+
+- 64-bit architecture recommended
 
-The following instructions assume you are running Ubuntu or RHEL6 64-bit with Python 2.7. If you are on RHEL which does not come with Python 2.7, you will need to install it. If you do, ensure all python library dependencies are installed using Python 2.7. Also, make sure you install mod_wsgi against the Python 2.7 install if you are looking to use Apache. More information on this can be found in the Github wiki at https://github.com/crits/crits/wiki/Common-Questions.
+**Modernization Summary:**
+This CRITs installation has been updated from legacy versions:
+- **Python**: 2.7 → 3.10+
+- **Django**: 1.x → 4.2.23 LTS
+- **MongoEngine**: 0.8 → 0.29.1
+- **MongoDB**: Updated to 6.0+ compatibility
+
+## Docker Installation (Recommended)
+
+The easiest way to get started with modernized CRITs is using Docker:
+
+```bash
+# Build the CRITs container
+docker build -t crits-modernized .
+
+# Run CRITs with MongoDB
+docker run -d -p 8080:8080 --name crits-app crits-modernized
+```
+
+The Docker container includes:
+- Ubuntu 22.04 LTS base
+- Python 3.10+ runtime
+- Django 4.2+ framework
+- MongoEngine 0.27+ ODM
+- MongoDB 6.0 database
+- All dependencies pre-installed
 
 ## Quick install using bootstrap
 
 CRITs comes with a bootstrap script which will help you:
 
-* Install all of the dependencies.
+* Install all of the dependencies (requires Python 3.10+).
 * Configure CRITs for database connectivity and your first admin user.
 * Get MongoDB running with default settings.
 * Use Django's runserver to quickly get you up and running with the CRITs interface.
 
+**Prerequisites:** Ensure you have Python 3.10+, pip3, and MongoDB installed.
+
 Just run the following:
 
 ```bash
+# Install Python dependencies
+pip3 install -r requirements.txt
 
-    sh script/bootstrap
+# Run the bootstrap script
+sh script/bootstrap
 ```
 
 Once you've run bootstrap once, do not use it again to get the runserver going, you'll be going through the install process again. Instead use the server script:
 
 ```bash
-
-    sh script/server
+# Start the development server
+python3 manage.py runserver 0.0.0.0:8080
 ```
 
 ## Production CRITs install

@@ -1,8 +1,7 @@
 from __future__ import absolute_import
 from datetime import datetime
 from distutils.version import StrictVersion
-
-    from django.utils.importlib import import_module
+import importlib
 
 import logging
 import os.path
@@ -66,7 +65,7 @@ class ServiceManager(object):
                     if (os.path.isdir(full_path) and
                         os.path.isfile(os.path.join(full_path, '__init__.py'))):
                         try:
-                            import_module(services_pkg)
+                            importlib.import_module(services_pkg)
                         except ImportError as e:
                             logger.warning("Failed to import service (%s): %s" %
                                             (services_pkg, e))

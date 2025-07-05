@@ -1,10 +1,10 @@
 # Updated for latest Django and MongoEngine
 Django>=4.2,<5.0
 mongoengine>=0.27.0
-djongo  # Django-MongoDB connector
+# djongo removed - using mongoengine directly
 Pillow
 amqp
-anyjson
+# anyjson removed - incompatible with Python 3.8+, use simplejson instead
 billiard
 biplist
 celery>=5.3.0
