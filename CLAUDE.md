@@ -10,45 +10,49 @@ CRITs (Collaborative Research Into Threats) is a Django-based web application fo
 
 ### Initial Setup
 ```bash
+# Install Python dependencies (requires Python 3.10+)
+pip3 install -r requirements.txt
+
 # First-time setup (installs dependencies, configures database, creates admin user)
 sh script/bootstrap
 
 # Start development server (after initial setup)
-sh script/server
+python3 manage.py runserver 0.0.0.0:8080
 
-# Alternative development server start
-python manage.py runserver 0.0.0.0:8080
+# Docker alternative (recommended)
+docker build -t crits-modernized .
+docker run -d -p 8080:8080 --name crits-app crits-modernized
 ```
 
 ### Core Management Commands
 ```bash
 # Create default database collections
-python manage.py create_default_collections
+python3 manage.py create_default_collections
 
 # Create database indexes
-python manage.py create_indexes
+python3 manage.py create_indexes
 
 # Create roles and permissions
-python manage.py create_roles
+python3 manage.py create_roles
 
 # Test installation and dependencies
-python manage.py test_install
+python3 manage.py test_install
 
 # User management
-python manage.py users -a -R UberAdmin -e "email@example.com" -f "First" -l "Last" -o "Org" -u "username"
+python3 manage.py users -a -R UberAdmin -e "email@example.com" -f "First" -l "Last" -o "Org" -u "username"
 
 # Configuration management
-python manage.py setconfig <setting_name> <value>
+python3 manage.py setconfig <setting_name> <value>
 ```
 
 ### Testing
 ```bash
 # Run Django tests
-python manage.py test
+python3 manage.py test
 
 # Run specific app tests
-python manage.py test crits.domains
-python manage.py test crits.samples
+python3 manage.py test crits.domains
+python3 manage.py test crits.samples
 ```
 
 ### Database Operations
@@ -58,7 +62,7 @@ python manage.py test crits.samples
 sudo sh contrib/mongo/mongod_start.sh
 
 # Database migration and upgrade commands
-python manage.py upgrade
+python3 manage.py upgrade
 ```
 
 ### Fabric Commands (for Vagrant/deployment)
@@ -137,9 +141,29 @@ fab vagrant init_services
 
 ## Development Notes
 
-- Uses Python 2.7 and Django < 2.0
-- Requires MongoDB 2.6+ running on localhost:27017
+### Modernized Requirements
+- **Python 3.10+** and **Django 4.2+ LTS** (modernized from Python 2.7/Django 1.x)
+- **MongoEngine 0.27+** (updated from 0.8)
+- **MongoDB 6.0+** running on localhost:27017 (updated from 2.6+)
 - Development server runs on port 8080 by default
 - Debug toolbar available when `ENABLE_DT` is True
-- Uses Fabric for deployment automation
+- Docker support available for containerized deployment
+- Uses Fabric for deployment automation (legacy, consider Docker instead)
 - Vagrant configuration available for development environments
+
+### Modernization Changes
+- All URL patterns updated from `url()` to `path()/re_path()`
+- Import statements modernized: `django.core.urlresolvers` → `django.urls`
+- Middleware configuration updated for Django 4.2+
+- Template system modernized
+- Python 3 compatibility fixes applied throughout codebase
+- Docker containerization added for easy deployment
+
+### Docker Quick Start
+```bash
+# Build and run with Docker (recommended)
+docker build -t crits-modernized .
+docker run -d -p 8080:8080 --name crits-app crits-modernized
+
+# Access CRITs at http://localhost:8080
+```
