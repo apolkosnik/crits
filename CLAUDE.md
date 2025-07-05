@@ -47,8 +47,26 @@ python3 manage.py setconfig <setting_name> <value>
 
 ### Testing
 ```bash
+# Quick modernization verification
+python3 verify_modernization.py
+
+# Comprehensive test suite (requires dependencies)
+python3 run_tests.py
+
+# Docker-based testing (recommended)
+docker-compose -f docker-compose.test.yml build
+docker-compose -f docker-compose.test.yml up
+
 # Run Django tests
 python3 manage.py test
+
+# Run specific test categories
+pytest tests/test_modernization.py -v      # Core modernization tests
+pytest tests/test_api_integration.py -v   # API integration tests
+pytest tests/test_web_functional.py -v    # Web interface tests
+
+# Run with coverage
+pytest --cov=crits --cov-report=html --cov-report=term
 
 # Run specific app tests
 python3 manage.py test crits.domains
@@ -161,9 +179,38 @@ fab vagrant init_services
 
 ### Docker Quick Start
 ```bash
-# Build and run with Docker (recommended)
-docker build -t crits-modernized .
-docker run -d -p 8080:8080 --name crits-app crits-modernized
+# Build and run with Docker Compose (recommended)
+docker-compose up -d
+
+# Create initial admin user
+docker-compose exec crits python3 manage.py users -R UberAdmin \
+  -u admin -p "YourSecurePassword123!" \
+  -e "admin@yourorg.com" -f "Admin" -l "User" -o "Your Organization"
 
 # Access CRITs at http://localhost:8080
+
+# Alternative: Build and run manually
+docker build -t crits-modernized .
+docker run -d -p 8080:8080 --name crits-app crits-modernized
 ```
+
+### Testing Infrastructure
+
+CRITs includes a comprehensive test suite for the Django 4.2+ and MongoEngine 0.27+ modernization:
+
+**Test Files:**
+- `tests/test_modernization.py` - Core modernization compatibility tests
+- `tests/test_api_integration.py` - API endpoint and integration testing
+- `tests/test_web_functional.py` - Web interface functional testing
+- `test_settings.py` - Django test configuration
+- `pytest.ini` - Pytest configuration and markers
+
+**Test Categories:**
+- **Unit Tests**: Core functionality and model validation
+- **Integration Tests**: API endpoints and database operations
+- **Functional Tests**: Web interface and form processing
+- **Security Tests**: CSRF protection and authentication
+- **Performance Tests**: Basic load and query performance
+
+**Running Tests:**
+See [TESTING.md](TESTING.md) for comprehensive testing guide.
