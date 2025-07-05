@@ -1,9 +1,5 @@
 from __future__ import absolute_import
 from bson import ObjectId
-try:
-    from mongoengine.base import ValidationError
-except ImportError:
-    from mongoengine.errors import ValidationError
 
 from crits.core.data_tools import generate_qrcode
 from crits.core.totp import gen_user_secret

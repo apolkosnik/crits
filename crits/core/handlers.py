@@ -22,20 +22,6 @@ import six
 from six.moves import map
 # we implement django.contrib.auth.login as user_login in here to accomodate mongoengine/pymongo
 
-try:
-    from django.urls import reverse, resolve, get_script_prefix
-except ImportError:
-    from django.core.urlresolvers import reverse, resolve, get_script_prefix
-from django.http import HttpResponse
-from django.shortcuts import render
-from django.template.loader import render_to_string
-from django.utils.html import escape as html_escape
-from django.utils.http import urlencode, urlunquote, is_safe_url
-
-try:
-    from mongoengine.base import ValidationError
-except ImportError:
-    from mongoengine.errors import ValidationError
 
 from operator import itemgetter
 

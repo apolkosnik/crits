@@ -4,16 +4,6 @@ import re
 import datetime
 import six
 
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-from django.http import HttpResponse
-from django.shortcuts import render
-try:
-    from mongoengine.base import ValidationError
-except ImportError:
-    from mongoengine.errors import ValidationError
 
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id, class_from_value

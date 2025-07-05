@@ -55,10 +55,8 @@ from django.contrib import auth
 from django.contrib.auth.hashers import check_password, make_password
 from django.http import HttpResponse
 
-# Importing these breaks on django 1.11
-#from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
-#from django.contrib.auth.models import _user_has_module_perms
-#from django.utils.translation import ugettext_lazy as _
+# These internal functions are no longer available in Django 4.2+
+# Functionality will be handled directly in the user model
 
 from crits.config.config import CRITsConfig
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument

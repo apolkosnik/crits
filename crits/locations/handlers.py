@@ -1,8 +1,4 @@
 from __future__ import absolute_import
-try:
-    from mongoengine.base import ValidationError
-except ImportError:
-    from mongoengine.errors import ValidationError
 
 from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedLocation

@@ -9,22 +9,6 @@ from collections import OrderedDict
 from dateutil.parser import parse
 from django.conf import settings
 import six
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-from django.template.loader import render_to_string
-
-from mongoengine import Document
-
-from mongoengine import EmbeddedDocument, DynamicEmbeddedDocument
-from mongoengine import StringField, ListField, EmbeddedDocumentField
-from mongoengine import IntField, DateTimeField, ObjectIdField, BooleanField
-from mongoengine.base import BaseDocument
-try:
-    from mongoengine import ValidationError
-except ImportError:
-    from mongoengine.base import ValidationError
 
 # Determine if we should be caching queries or not.
 if settings.QUERY_CACHING:
@@ -43,10 +27,6 @@ from crits.vocabulary.objects import ObjectTypes
 # Hack to fix an issue with non-cached querysets and django-tastypie-mongoengine
 # The issue is in django-tastypie-mongoengine in resources.py from what I can
 # tell.
-try:
-    from mongoengine.queryset import tranform as mongoengine_tranform
-except ImportError:
-    mongoengine_tranform = None
 
 QUERY_TERMS_ALL = getattr(mongoengine_tranform, 'MATCH_OPERATORS', (
     'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'mod', 'all', 'size', 'exists',
