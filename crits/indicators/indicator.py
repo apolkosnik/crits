@@ -1,4 +1,6 @@
+from __future__ import absolute_import
 import datetime
+import six
 
 try:
 	from django_mongoengine import Document
@@ -260,7 +262,7 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
             len(threat_types) == 1 and
             threat_types[0] == ''):
             parsed_threat_types = []
-        elif isinstance(threat_types, (str, unicode)):
+        elif isinstance(threat_types, (str, six.text_type)):
             parsed_threat_types = threat_types.split(',')
         else:
             parsed_threat_types = threat_types
@@ -308,7 +310,7 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
             len(attack_types) == 1 and
             attack_types[0] == ''):
             parsed_attack_types = []
-        elif isinstance(attack_types, (str, unicode)):
+        elif isinstance(attack_types, (str, six.text_type)):
             parsed_attack_types = attack_types.split(',')
         else:
             parsed_attack_types = attack_types

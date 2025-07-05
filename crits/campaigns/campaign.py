@@ -1,4 +1,6 @@
+from __future__ import absolute_import
 import datetime
+import six
 
 try:
 	from django_mongoengine import Document
@@ -137,10 +139,10 @@ class Campaign(CritsBaseAttributes, CritsActionsDocument, Document):
 
         """
 
-        if isinstance(alias, basestring):
+        if isinstance(alias, six.string_types):
             alias = [alias]
         for a in alias:
-            if a not in self.aliases and isinstance(a, basestring):
+            if a not in self.aliases and isinstance(a, six.string_types):
                 self.aliases.append(a)
 
     def remove_alias(self, alias):

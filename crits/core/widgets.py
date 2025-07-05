@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from django import forms
 from django.forms.widgets import Select
 from django.forms.fields import ChoiceField

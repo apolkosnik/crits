@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import json
-import urllib
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 
 from django import forms
 from django.contrib.auth.decorators import user_passes_test
@@ -106,7 +107,7 @@ def event_search(request):
     query = {}
     query[request.GET.get('search_type', '')] = request.GET.get('q', '').strip()
     return HttpResponseRedirect(reverse('crits-events-views-events_listing') +
-                                "?%s" % urllib.urlencode(query))
+                                "?%s" % six.moves.urllib.parse.urlencode(query))
 
 
 @user_passes_test(user_can_view_data)

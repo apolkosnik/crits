@@ -28,6 +28,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #-------------
 
+from __future__ import absolute_import
 import datetime
 import hmac
 import logging
@@ -38,6 +39,7 @@ import time
 import uuid
 
 from hashlib import sha1
+import six
 
 try:
     from django_mongoengine import Document
@@ -927,9 +929,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         """
         if not object:
             return False
-        user_source_list_red = [x.name for x in filter(lambda us: us.tlp_red and us.read, self.acl.get('sources'))]
-        user_source_list_amber = [x.name for x in filter(lambda us: us.tlp_amber and us.read, self.acl.get('sources'))]
-        user_source_list_green = [x.name for x in filter(lambda us: us.tlp_green and us.read, self.acl.get('sources'))]
+        user_source_list_red = [x.name for x in [us for us in self.acl.get('sources') if us.tlp_red and us.read]]
+        user_source_list_amber = [x.name for x in [us for us in self.acl.get('sources') if us.tlp_amber and us.read]]
+        user_source_list_green = [x.name for x in [us for us in self.acl.get('sources') if us.tlp_green and us.read]]
         source_tlp_filter = {'$elemMatch': {'$or': [{'instances.tlp': 'white'}, # Consider 'TLP white' open to all, even users who don't have permission on the source
                                                     # If the TLP isn't specified on any source instance, treat it like TLP Red
                                                     {'name': {'$in': user_source_list_red}, 'instances': {'$elemMatch': {'tlp': {'$exists': False}}}},
@@ -992,7 +994,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         # for each role, modify the acl object to reflect all of the attributes
         # the user should be granted access to.
         for r in roles:
-            for p,v in r._data.iteritems():
+            for p,v in six.iteritems(r._data):
                 if p in ['name', 'description', 'active', 'id']:
                     # No need to worry about these. Added benefit of
                     # throwing a validation error since there is no name
@@ -1009,7 +1011,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                         found = False
                         for src in acl['sources']:
                             if s.name == src.name:
-                                for x,y in s._data.iteritems():
+                                for x,y in six.iteritems(s._data):
                                     if not acl['sources'][c].get(x, True):
                                         acl['sources'][c][x] = y
                                 found = True
@@ -1017,7 +1019,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                             c += 1
                         if not found:
                             acl['sources'].append(s)
-                elif p in settings.CRITS_TYPES.iterkeys():
+                elif p in six.iterkeys(settings.CRITS_TYPES):
                     # For each CRITs Type adjust the attributes based on which
                     # ones the # user should get access to.
 
@@ -1025,7 +1027,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                     attr = acl.get(p, False)
 
                     # Modify the attributes.
-                    for x,y in getattr(r, p)._data.iteritems():
+                    for x,y in six.iteritems(getattr(r, p)._data):
                         if not getattr(attr, x, False):
                             setattr(attr, x, y)
 
@@ -1075,14 +1077,14 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         attributes to allow for functions that act dynamically on multiple TLOs
         to be able to do so without huge if blocks. Example from above:
 
-            for x in settings.CRITS_TYPES.iterkeys():
+            for x in six.iterkeys(settings.CRITS_TYPES):
                 if (X.has_access_to('%s.read' % x)
                     and X.has_access_to('%s.bucketlist_read' % x):
 
         Is much cleaner than:
 
             acl = X.get_access_list()
-            for x in settings.CRITS_TYPES.iterkeys():
+            for x in six.iterkeys(settings.CRITS_TYPES):
                 if (getattr(getattr(acl, x), 'read')
                     and getattr(getattr(acl, x), 'bucketlist_read'))
 
@@ -1305,7 +1307,7 @@ Please contact a site administrator to resolve.
 """
                 try:
                     user.email_user(subject, body)
-                except Exception, err:
+                except Exception as err:
                     logger.warning("Error sending email: %s" % str(err))
             self.track_login_attempt(user, e)
             user.reload()

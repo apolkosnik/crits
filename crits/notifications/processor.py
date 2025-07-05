@@ -1,3 +1,4 @@
+import six
 
 
 class ChangeParser():
@@ -110,13 +111,13 @@ class ChangeParser():
         message = ""
         if len(added_names) > 0:
             added_names = ', '.join(added_names)
-            if not isinstance(added_names, unicode):
-                added_names = unicode(added_names, 'utf-8', 'replace')
+            if not isinstance(added_names, six.text_type):
+                added_names = six.text_type(added_names, 'utf-8', 'replace')
             message += "Added to %s: %s. " % (changed_field, added_names)
         if len(removed_names) > 0:
             removed_names = ', '.join(removed_names)
-            if not isinstance(removed_names, unicode):
-                removed_names = unicode(removed_names, 'utf-8', 'replace')
+            if not isinstance(removed_names, six.text_type):
+                removed_names = six.text_type(removed_names, 'utf-8', 'replace')
             message += "Removed from %s: %s. " % (changed_field, removed_names)
 
         return message
@@ -142,13 +143,13 @@ class ChangeParser():
         message = ""
         if len(added_names) > 0:
             added_names = ', '.join(added_names)
-            if not isinstance(added_names, unicode):
-                added_names = unicode(added_names, 'utf-8', 'replace')
+            if not isinstance(added_names, six.text_type):
+                added_names = six.text_type(added_names, 'utf-8', 'replace')
             message += "Added to %s: %s. " % (changed_field, added_names)
         if len(removed_names) > 0:
             removed_names = ', '.join(removed_names)
-            if not isinstance(removed_names, unicode):
-                removed_names = unicode(removed_names, 'utf-8', 'replace')
+            if not isinstance(removed_names, six.text_type):
+                removed_names = six.text_type(removed_names, 'utf-8', 'replace')
             message += "Removed from %s: %s. " % (changed_field, removed_names)
 
         return message
@@ -346,7 +347,7 @@ class ChangeParser():
     ############################################################################
     @staticmethod
     def actions_summary_handler(object):
-        return "%s - %s" % (object.action_type, unicode(object.date))
+        return "%s - %s" % (object.action_type, six.text_type(object.date))
 
     @staticmethod
     def indicator_activity_summary_handler(object):
@@ -358,8 +359,8 @@ class ChangeParser():
 
     @staticmethod
     def raw_data_highlights_summary_handler(object):
-        if not isinstance(object.line_data, unicode):
-            line_data = unicode(object.line_data, 'utf-8', 'replace')
+        if not isinstance(object.line_data, six.text_type):
+            line_data = six.text_type(object.line_data, 'utf-8', 'replace')
         return "line %s: %s" % (object.line, line_data)
 
     @staticmethod
@@ -539,7 +540,7 @@ class ChangeParser():
         message = ChangeParser.parse_generic_change_object_list(changed_sources, changed_field, 'name',
                 ChangeParser.source_parse_handler)
 
-        return {'message': message, 'source_filter': changed_sources.keys()}
+        return {'message': message, 'source_filter': list(changed_sources.keys())}
 
     @staticmethod
     def source_instances_parse_handler(old_value, new_value, base_fqn):

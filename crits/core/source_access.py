@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 try:
 	from django_mongoengine import Document
 except ImportError:

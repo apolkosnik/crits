@@ -1,4 +1,6 @@
+from __future__ import absolute_import
 import json
+import six
 
 try:
     from django.urls import reverse
@@ -230,7 +232,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
     retVal = {'success': False, 'message': ''}
     username = user.username
 
-    if isinstance(source, basestring):
+    if isinstance(source, six.string_types):
         if user.check_source_write(source):
             source = [create_embedded_source(source,
                                              reference=source_reference,
@@ -292,7 +294,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         if description and backdoor.description == '':
             backdoor.description = description.strip()
 
-        if isinstance(campaign, basestring):
+        if isinstance(campaign, six.string_types):
             c = EmbeddedCampaign(name=campaign,
                                  confidence=confidence,
                                  analyst=username)
@@ -303,7 +305,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
                 backdoor.add_campaign(camp)
 
         if aliases:
-            if isinstance(aliases, basestring):
+            if isinstance(aliases, six.string_types):
                 aliases = aliases.split(',')
             for alias in aliases:
                 alias = alias.strip()

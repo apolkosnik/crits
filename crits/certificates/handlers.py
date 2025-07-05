@@ -1,8 +1,10 @@
+from __future__ import absolute_import
 import datetime
 import hashlib
 import json
 
 from bson.objectid import ObjectId
+import six
 try:
     from django.urls import reverse
 except ImportError:
@@ -308,7 +310,7 @@ def handle_cert_file(filename, data, source_name, user=None,
         cert.md5 = md5
 
     # generate source information and add to certificate
-    if isinstance(source_name, basestring) and len(source_name) > 0:
+    if isinstance(source_name, six.string_types) and len(source_name) > 0:
         if user.check_source_write(source_name):
             s = create_embedded_source(source_name,
                                              reference=reference,

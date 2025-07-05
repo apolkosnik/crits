@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
@@ -5,6 +7,7 @@ import sys
 
 from crits.core.role import Role
 from crits.core.user import CRITsUser
+import six
 
 
 class Command(BaseCommand):
@@ -52,7 +55,7 @@ class Command(BaseCommand):
         uberadmin = options.get('uberadmin')
 
         if mall or drop:
-            print "Drop protection disabled. Dropping all Roles!"
+            print("Drop protection disabled. Dropping all Roles!")
             Role.drop_collection()
         if mall or uberadmin:
             add_uber_admin_role()
@@ -87,13 +90,13 @@ def add_uber_admin_role(drop=False):
     """
 
     if drop:
-        print "Drop protection disabled. Dropping all Roles!"
+        print("Drop protection disabled. Dropping all Roles!")
         Role.drop_collection()
     else:
-        print "Drop protection enabled!\nResetting 'UberAdmin' Role to defaults!"
+        print("Drop protection enabled!\nResetting 'UberAdmin' Role to defaults!")
     role = Role.objects(name=settings.ADMIN_ROLE).first()
     if not role:
-        print "Could not find UberAdmin Role. Creating it!"
+        print("Could not find UberAdmin Role. Creating it!")
         role = Role()
         role.name = settings.ADMIN_ROLE
         role.description = "Default role with full system access."
@@ -120,11 +123,11 @@ def add_readonly_role():
                    'description',
                    'unsupported_attrs']
 
-    for p in role._data.iterkeys():
-        if p in settings.CRITS_TYPES.iterkeys():
+    for p in six.iterkeys(role._data):
+        if p in six.iterkeys(settings.CRITS_TYPES):
             attr = getattr(role, p)
             # Modify the attributes.
-            for x in attr._data.iterkeys():
+            for x in six.iterkeys(attr._data):
                 if 'read' in str(x):
                     setattr(attr, x, True)
                 else:
@@ -133,7 +136,7 @@ def add_readonly_role():
             setattr(role, p, attr)
         elif p == "sources":
             for s in getattr(role, p):
-                for x in s._data.iterkeys():
+                for x in six.iterkeys(s._data):
                     if x != "name":
                         setattr(s, x, True)
 
@@ -165,11 +168,11 @@ def add_analyst_role():
                    'description',
                    'unsupported_attrs']
 
-    for p in role._data.iterkeys():
-        if p in settings.CRITS_TYPES.iterkeys():
+    for p in six.iterkeys(role._data):
+        if p in six.iterkeys(settings.CRITS_TYPES):
             attr = getattr(role, p)
             # Modify the attributes.
-            for x in attr._data.iterkeys():
+            for x in six.iterkeys(attr._data):
                 if 'delete' not in str(x):
                     setattr(attr, x, True)
                 else:
@@ -178,7 +181,7 @@ def add_analyst_role():
             setattr(role, p, attr)
         elif p == "sources":
             for s in getattr(role, p):
-                for x in s._data.iterkeys():
+                for x in six.iterkeys(s._data):
                     if x != "name":
                         setattr(s, x, True)
 
@@ -210,10 +213,10 @@ def migrate_roles():
             elif 'unsupported_attrs' in user and 'role' in user['unsupported_attrs']:
                 role = user['unsupported_attrs']['role']
             else:
-                print "Error migrating legacy roles for user %s. No legacy role found to migrate." % user
+                print("Error migrating legacy roles for user %s. No legacy role found to migrate." % user)
                 sys.exit()
         except:
-            print "Error migrating legacy roles for user %s. No legacy role found to migrate." % user
+            print("Error migrating legacy roles for user %s. No legacy role found to migrate." % user)
             sys.exit()
 
 

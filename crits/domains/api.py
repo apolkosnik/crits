@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+import six
 try:
     from django.urls import reverse
 except ImportError:
@@ -115,7 +117,7 @@ class DomainResource(CRITsAPIResource):
                       'message':'User does not have permission to create Object.'}
         if not 'message' in retVal:
             retVal['message'] = ""
-        elif not isinstance(retVal['message'], basestring):
+        elif not isinstance(retVal['message'], six.string_types):
             retVal['message'] = str(retVal['message'])
         if errors:
             for e in errors:

@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import json
-import urllib
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 import logging
 
 from django.contrib.auth.decorators import user_passes_test
@@ -60,7 +61,7 @@ def ip_search(request):
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
     #return render(request, 'error.html', {'error': query})
     return HttpResponseRedirect(reverse('crits-ips-views-ips_listing')
-                                + "?%s" % urllib.urlencode(query))
+                                + "?%s" % six.moves.urllib.parse.urlencode(query))
 
 @user_passes_test(user_can_view_data)
 def ip_detail(request, ip):

@@ -1,7 +1,9 @@
+from __future__ import absolute_import
 import datetime
 import re
 
 from bson.objectid import ObjectId
+import six
 try:
 	from django_mongoengine import Document
 except ImportError:
@@ -172,7 +174,7 @@ class Comment(CritsDocument, CritsSchemaDocument, CritsSourceDocument, Document)
         :type url_key: str
         """
 
-        if isinstance(url_key, basestring):
+        if isinstance(url_key, six.string_types):
                 self.url_key = url_key
 
 def parse_comment(comment):

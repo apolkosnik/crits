@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import json
 
 from django import forms
@@ -291,7 +292,7 @@ def upload_file(request, related_md5=None):
                         backdoor_version=backdoor_version,
                         description=description)
 
-            except ZipFileError, zfe:
+            except ZipFileError as zfe:
                 return render(request, 'file_upload_response.html', {'response': json.dumps({'success': False,
                                 'message': zfe.value})})
             else:
@@ -481,7 +482,7 @@ def unzip_sample(request, md5):
             pwd = form.cleaned_data['password']
             try:
                 handle_unzip_file(md5, user=request.user, password=pwd)
-            except ZipFileError, zfe:
+            except ZipFileError as zfe:
                 return render(request, 'error.html', {'error' : zfe.value})
         return HttpResponseRedirect(reverse('crits-samples-views-detail',
                                             args=[md5]))

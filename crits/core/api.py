@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import json
 import yaml
 
@@ -5,6 +6,7 @@ from bson.objectid import ObjectId
 from dateutil.parser import parse
 from django.http import HttpResponse
 from lxml.etree import tostring
+import six
 
 try:
     from django.urls import resolve, get_script_prefix
@@ -191,7 +193,7 @@ class CRITsSerializer(Serializer):
                     response['Content-Disposition'] = 'attachment; filename="results.zip"'
                 else:
                     response = BadRequest("No files found!")
-            except Exception, e:
+            except Exception as e:
                 response = BadRequest(str(e))
         return response
 
@@ -444,7 +446,7 @@ class CRITsAPIResource(MongoEngineResource):
                 querydict['_id'] = path[-1]
 
         do_or = False
-        for k,v in get_params.iteritems():
+        for k,v in six.iteritems(get_params):
             v = v.strip()
             try:
                 v_int = int(v)
@@ -542,7 +544,7 @@ class CRITsAPIResource(MongoEngineResource):
                 do_or = True
         if do_or:
             tmp = {}
-            tmp['$or'] = [{x:y} for x,y in querydict.iteritems()]
+            tmp['$or'] = [{x:y} for x,y in six.iteritems(querydict)]
             querydict = tmp
         if no_sources and sources:
             querydict['source.name'] = {'$in': source_list}
@@ -551,7 +553,7 @@ class CRITsAPIResource(MongoEngineResource):
             querydict_tlp_filter = querydict
 
         if only or exclude:
-            required = [k for k,f in klass._fields.iteritems() if f.required]
+            required = [k for k,f in six.iteritems(klass._fields) if f.required]
         if only:
             fields = only.split(',')
             if exclude:
@@ -736,7 +738,7 @@ class CRITsAPIResource(MongoEngineResource):
                     content['message'] = message
                 else:
                     content['message'] = "success!"
-            except Exception, e:
+            except Exception as e:
                 content['return_code'] = 1
                 content['message'] = str(e)
         else:

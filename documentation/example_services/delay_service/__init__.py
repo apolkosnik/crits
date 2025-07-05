@@ -1,5 +1,8 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import logging
 import time
+from six.moves import range
 
 from crits.services.core import Service, ServiceConfigOption
 
@@ -23,7 +26,7 @@ class DelayService(Service):
         return
 
     def run(self, obj, config):
-        for i in xrange(5):
+        for i in range(5):
             self._info(i)
             logger.info(i)
             self._info("sleeping")

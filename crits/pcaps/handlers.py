@@ -1,8 +1,10 @@
+from __future__ import absolute_import
 import datetime
 import hashlib
 import json
 
 from bson.objectid import ObjectId
+import six
 try:
     from django.urls import reverse
 except ImportError:
@@ -315,7 +317,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
         is_pcap_new = True
 
     # generate source information and add to pcap
-    if isinstance(source_name, basestring) and len(source_name) > 0:
+    if isinstance(source_name, six.string_types) and len(source_name) > 0:
         if user.check_source_write(source_name):
             s = create_embedded_source(source_name,
                                        method=method,

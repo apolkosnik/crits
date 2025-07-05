@@ -1,5 +1,7 @@
 # CRITs environment chooser
 
+from __future__ import absolute_import
+from __future__ import print_function
 import errno
 import glob
 import os
@@ -123,7 +125,7 @@ BUCKET_SAMPLES = "samples"
 # Import custom Database config
 dbfile = os.path.join(SITE_ROOT, 'config/database.py')
 if os.path.exists(dbfile):
-    execfile(dbfile)
+    exec(compile(open(dbfile, "rb").read(), dbfile, 'exec'))
 
 if TEST_RUN:
     MONGO_DATABASE = 'crits-unittest'
@@ -847,4 +849,4 @@ else:
 # Import custom settings if it exists
 csfile = os.path.join(SITE_ROOT, 'config/overrides.py')
 if os.path.exists(csfile):
-    execfile(csfile)
+    exec(compile(open(csfile, "rb").read(), csfile, 'exec'))

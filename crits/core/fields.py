@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import datetime
 
 from dateutil.parser import parse
@@ -8,6 +9,7 @@ from six import string_types as str_types
 import io
 
 from django.conf import settings
+import six
 if settings.FILE_DB == settings.S3:
     import crits.core.s3_tools as S3
 
@@ -25,7 +27,7 @@ class CritsDateTimeField(DateTimeField):
         return super(CritsDateTimeField, self).__set__(instance, value)
 
     def transform(self, value):
-        if value and isinstance(value, basestring):
+        if value and isinstance(value, six.string_types):
             return parse(value, fuzzy=True)
         elif not value:
             return datetime.datetime.now()

@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from django.core.management.base import BaseCommand
 
 from django.conf import settings
@@ -69,7 +71,7 @@ def remove_indexes():
                  ]
 
     for coll in coll_list:
-        print "Removing index for: %s" % coll
+        print("Removing index for: %s" % coll)
         c = mongo_connector(coll)
         c.drop_indexes()
 
@@ -80,7 +82,7 @@ def create_indexes():
     to best fit their requirements.
     """
 
-    print "Creating indexes (duplicates will be ignored automatically)"
+    print("Creating indexes (duplicates will be ignored automatically)")
 
     analysis_results = mongo_connector(settings.COL_ANALYSIS_RESULTS)
     analysis_results.create_index("service_name", background=True)

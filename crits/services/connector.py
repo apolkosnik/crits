@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 class UnknownConnector(Exception):
     """
     Exception for dealing with an unknown connector type.

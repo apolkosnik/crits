@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import json
-import urllib
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 
 from django import forms
 from django.shortcuts import render
@@ -65,7 +66,7 @@ def email_search(request):
                           '')]=request.GET.get('q',
                                                '').strip()
     return HttpResponseRedirect(reverse('crits-emails-views-emails_listing')
-                                + "?%s" % urllib.urlencode(query))
+                                + "?%s" % six.moves.urllib.parse.urlencode(query))
 
 
 @user_passes_test(user_can_view_data)

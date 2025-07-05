@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from crits.vocabulary.vocab import vocab
 
 class Status(vocab):

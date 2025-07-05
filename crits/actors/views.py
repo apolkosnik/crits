@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import json
-import urllib
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 
 from django.contrib.auth.decorators import user_passes_test
 try:
@@ -87,7 +88,7 @@ def actor_search(request):
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
     return HttpResponseRedirect(reverse('crits-actors-views-actors_listing')
-                                + "?%s" % urllib.urlencode(query))
+                                + "?%s" % six.moves.urllib.parse.urlencode(query))
 
 @user_passes_test(user_can_view_data)
 def actor_detail(request, id_):

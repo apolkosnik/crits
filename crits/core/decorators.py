@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from django.http import HttpResponseNotAllowed
 
 def requires_post(func):

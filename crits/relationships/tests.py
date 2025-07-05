@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from django.test import SimpleTestCase
 
 from crits.relationships.handlers import forge_relationship, update_relationship_reasons, update_relationship_confidences

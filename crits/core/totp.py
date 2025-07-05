@@ -1,7 +1,9 @@
+from __future__ import absolute_import
 import hmac, base64, struct, hashlib, time
 from django.utils.crypto import pbkdf2
 from Crypto import Random
 from Crypto.Cipher import AES
+from six.moves import range
 
 # from http://stackoverflow.com/questions/8529265/google-authenticator-implementation-in-python
 def get_hotp_token(secret, intervals_no):

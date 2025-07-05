@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import datetime
 import json, yaml
 import io
@@ -7,6 +8,7 @@ from bson import json_util, ObjectId
 from collections import OrderedDict
 from dateutil.parser import parse
 from django.conf import settings
+import six
 try:
     from django.urls import reverse
 except ImportError:
@@ -158,7 +160,7 @@ class CritsQuerySet(QS):
                        'schema_version',
                        ]
         if not fields:
-            fields = self[0]._data.keys()
+            fields = list(self[0]._data.keys())
         # Create a local copy
         fields = fields[:]
         for key in filter_keys:
@@ -483,9 +485,9 @@ class CritsDocument(BaseDocument):
         #Make sure any fields that are unsupported but exist in the database
         #   get added to the document's unsupported_attributes field.
         #Get database names for all fields that *should* exist on the object.
-        db_fields = [val.db_field for key,val in cls._fields.iteritems()]
+        db_fields = [val.db_field for key,val in six.iteritems(cls._fields)]
         #custom __setattr__ does logic of moving fields to unsupported_fields
-        [doc.__setattr__("%s"%key, val) for key,val in son.iteritems()
+        [doc.__setattr__("%s"%key, val) for key,val in six.iteritems(son)
             if key not in db_fields]
 
         #After a document is retrieved from the database, and any unsupported
@@ -559,7 +561,7 @@ class CritsDocument(BaseDocument):
         """
 
         if not fields:
-            fields = self._data.keys()
+            fields = list(self._data.keys())
         csv_string = io.BytesIO()
         csv_wr = csv.writer(csv_string)
         if headers:
@@ -585,7 +587,7 @@ class CritsDocument(BaseDocument):
                         try: # convert list of strings
                             data = ";".join(data)
                         except: # Convert non-string data types
-                            data = unicode(data)
+                            data = six.text_type(data)
                 row.append(data.encode('utf-8'))
             else:
                 row.append('')
@@ -1144,7 +1146,7 @@ class EmbeddedTickets(BaseDocument):
         :type date: datetime.datetime.
         """
 
-        if isinstance(tickets, basestring):
+        if isinstance(tickets, six.string_types):
             tickets = tickets.split(',')
         elif not isinstance(tickets, list):
             tickets = [tickets]
@@ -1153,7 +1155,7 @@ class EmbeddedTickets(BaseDocument):
             if isinstance(ticket, EmbeddedTicket):
                 if not self.is_ticket_exist(ticket.ticket_number): # stop dups
                     self.tickets.append(ticket)
-            elif isinstance(ticket, basestring):
+            elif isinstance(ticket, six.string_types):
                 if ticket and not self.is_ticket_exist(ticket):  # stop dups
                     et = EmbeddedTicket()
                     et.analyst = analyst
@@ -1345,7 +1347,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         for s in self.source:
             for i in s.instances:
                 my_tlps.append(i.tlp)
-        my_tlps = OrderedDict.fromkeys(my_tlps).keys()
+        my_tlps = list(OrderedDict.fromkeys(my_tlps).keys())
 
         if 'white' in my_tlps:
             return d['white']
@@ -1461,7 +1463,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type longitude: str
         """
 
-        if isinstance(date, basestring):
+        if isinstance(date, six.string_types):
             date = parse(date, fuzzy=True)
         for location in self.locations:
             if (location.location == location_name and
@@ -1487,7 +1489,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type date: str
         """
 
-        if isinstance(date, basestring):
+        if isinstance(date, six.string_types):
             date = parse(date, fuzzy=True)
         for location in self.locations:
             if (location.location == location_name and
@@ -1514,7 +1516,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         # or subtraction of a bucket_list.
         if isinstance(tags, list) and len(tags) == 1 and tags[0] == '':
             parsed_tags = []
-        elif isinstance(tags, (str, unicode)):
+        elif isinstance(tags, (str, six.text_type)):
             parsed_tags = tags.split(',')
         else:
             parsed_tags = tags
@@ -1566,7 +1568,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         # or subtraction of a sector.
         if isinstance(sectors, list) and len(sectors) == 1 and sectors[0] == '':
             parsed_sectors = []
-        elif isinstance(sectors, (str, unicode)):
+        elif isinstance(sectors, (str, six.text_type)):
             parsed_sectors = sectors.split(',')
         else:
             parsed_sectors = sectors
@@ -2036,12 +2038,12 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         got_rel = True
         if not rel_item:
             got_rel = False
-            if isinstance(rel_id, basestring) and isinstance(type_, basestring):
+            if isinstance(rel_id, six.string_types) and isinstance(type_, six.string_types):
                 rel_item = class_from_id(type_, rel_id)
             else:
                 return {'success': False,
                         'message': 'Could not find object'}
-        if isinstance(new_date, basestring):
+        if isinstance(new_date, six.string_types):
             new_date = parse(new_date, fuzzy=True)
         if rel_item and rel_type and modification:
             # get reverse relationship
@@ -2401,7 +2403,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             sources = user_sources(username)
         for ty in set(rel.to_dict()['type'] for rel in self.relationships):
             obj_class = class_from_type(ty)
-            objids = [ty_o.to_dict()['value'] for ty_o in filter(lambda o: o.to_dict()['type'] == ty, self.relationships)]
+            objids = [ty_o.to_dict()['value'] for ty_o in [o for o in self.relationships if o.to_dict()['type'] == ty]]
             if r.rel_type not in ['Campaign', 'Target']:
                 obj = obj_class.objects(id__in=objids, source__name__in=sources)
             else:
@@ -2474,7 +2476,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type name: str
         """
 
-        if isinstance(name, basestring):
+        if isinstance(name, six.string_types):
             for r in self.releasability:
                 if r.name == name and len(r.instances) == 0:
                     self.releasability.remove(r)
@@ -2603,7 +2605,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             details_url_key = mapper['details_url_key']
 
             try:
-                return reverse(details_url, args=(unicode(self[details_url_key]),))
+                return reverse(details_url, args=(six.text_type(self[details_url_key]),))
             except Exception:
                 return None
         else:
@@ -2720,7 +2722,7 @@ def merge(self, arg_dict=None, overwrite=False, **kwargs):
     if not arg_dict:
         arg_dict = kwargs
     if isinstance(arg_dict, dict):
-        iterator = arg_dict.iteritems()
+        iterator = six.iteritems(arg_dict)
     else:
         iterator = arg_dict
 
@@ -2781,7 +2783,7 @@ def create_embedded_source(name, source_instance=None, date=None,
     if tlp not in ('white', 'green', 'amber', 'red', None):
         return None
 
-    if isinstance(name, basestring):
+    if isinstance(name, six.string_types):
         s = EmbeddedSource()
         s.name = name
         if isinstance(source_instance, EmbeddedSource.SourceInstance):

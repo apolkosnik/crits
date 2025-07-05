@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from django.utils.crypto import get_random_string as grs
 
-print grs(50, 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(-_=+)')
+print(grs(50, 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(-_=+)'))

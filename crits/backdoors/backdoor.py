@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+import six
 try:
 	from django_mongoengine import Document
 except ImportError:
@@ -64,7 +66,7 @@ class Backdoor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         :type aliases: list
         """
 
-        if isinstance(aliases, basestring):
+        if isinstance(aliases, six.string_types):
             aliases = aliases.split(',')
         aliases = [a.strip() for a in aliases if a != '']
         existing_aliases = None

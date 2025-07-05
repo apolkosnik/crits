@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import json
 
 from django.contrib.auth.decorators import user_passes_test
@@ -17,6 +18,7 @@ from crits.core.handsontable_tools import form_to_dict, parse_bulk_upload, get_f
 from crits.core.user_tools import user_can_view_data, get_acl_object
 
 from crits.vocabulary.objects import ObjectTypes
+import six
 
 @user_passes_test(user_can_view_data)
 def add_new_object(request):
@@ -63,7 +65,7 @@ def add_new_object(request):
             if 'value' in request.FILES:
                 data = request.FILES['value']
             value = request.POST.get('value', None)
-            if isinstance(value, basestring):
+            if isinstance(value, six.string_types):
                 value = value.strip()
             results = add_object(my_type,
                                  oid,

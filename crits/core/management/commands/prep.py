@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import logging
 
 from django.conf import settings
@@ -154,7 +155,7 @@ def prep_indexes():
     """
 
     # Create default indexes.
-    from create_indexes import create_indexes
+    from .create_indexes import create_indexes
     create_indexes()
 
 def update_database_version():

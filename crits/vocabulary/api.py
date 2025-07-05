@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from tastypie import authorization, fields, http
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import ImmediateHttpResponse

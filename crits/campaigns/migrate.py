@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 def migrate_campaign(self):
     """
     Latest migration.

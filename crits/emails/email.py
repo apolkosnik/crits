@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import datetime
 
 from dateutil.parser import parse as date_parser

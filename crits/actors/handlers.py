@@ -1,4 +1,6 @@
+from __future__ import absolute_import
 import json
+import six
 
 try:
     from django.urls import reverse
@@ -370,7 +372,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
             actor.description = description.strip()
         is_item_new = True
 
-    if isinstance(source, basestring):
+    if isinstance(source, six.string_types):
         if user.check_source_write(source):
             source = [create_embedded_source(source,
                                              reference=source_reference,
@@ -382,7 +384,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
                     "message": "User does not have permission to add objects \
                     using source %s." % str(source)}
 
-    if isinstance(campaign, basestring):
+    if isinstance(campaign, six.string_types):
         c = EmbeddedCampaign(name=campaign,
                              confidence=confidence,
                              analyst=username)
@@ -570,7 +572,7 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
                     'message': "Missing Identifier"}
         actor_identifier.name = identifier.strip()
 
-    if isinstance(source, basestring):
+    if isinstance(source, six.string_types):
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,

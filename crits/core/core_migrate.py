@@ -5,6 +5,7 @@
 # For migrating analysis results to their own collection.
 # mgoffin
 # 2014-09-24
+from __future__ import absolute_import
 def migrate_analysis_results(self):
     from crits.services.analysis_result import (AnalysisResult,
                                                 AnalysisConfig,

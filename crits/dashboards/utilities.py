@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from crits.actors.actor import Actor
 from crits.services.analysis_result import AnalysisResult
 from crits.campaigns.campaign import Campaign
@@ -13,6 +14,7 @@ from crits.raw_data.raw_data import RawData
 from crits.samples.sample import Sample
 from crits.screenshots.screenshot import Screenshot
 from crits.targets.target import Target
+import six
 
 
 def getHREFLink(object, object_type):
@@ -59,7 +61,7 @@ def getHREFLink(object, object_type):
         key = "id"
     #adding the last part of the url 
     if key in object:
-        href += unicode(object[key]) + "/"
+        href += six.text_type(object[key]) + "/"
     return href
 
 def get_obj_name_from_title(tableTitle):

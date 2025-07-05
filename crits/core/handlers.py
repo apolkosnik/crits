@@ -1,14 +1,15 @@
+from __future__ import absolute_import
 import cgi
 import os
 import datetime
-import HTMLParser
+import six.moves.html_parser
 import json
 import logging
 import re
 import ushlex as shlex
-import urllib
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 from bson.objectid import ObjectId
 from django.conf import settings
 
@@ -17,6 +18,8 @@ from django.contrib.auth.signals import user_logged_in
 from django.middleware.csrf import rotate_token
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as user_login
+import six
+from six.moves import map
 # we implement django.contrib.auth.login as user_login in here to accomodate mongoengine/pymongo
 
 try:
@@ -125,7 +128,7 @@ def action_add(type_, id_, tlo_action, user=None, **kwargs):
                        date = datetime.datetime.now())
         obj.save(username=user)
         return {'success': True, 'object': tlo_action}
-    except (ValidationError, TypeError, KeyError), e:
+    except (ValidationError, TypeError, KeyError) as e:
         return {'success': False, 'message': e}
 
 def action_remove(type_, id_, date, action_type, user, **kwargs):
@@ -165,7 +168,7 @@ def action_remove(type_, id_, date, action_type, user, **kwargs):
         obj.delete_action(date, action_type)
         obj.save(username=user)
         return {'success': True}
-    except (ValidationError, TypeError), e:
+    except (ValidationError, TypeError) as e:
         return {'success': False, 'message': e}
 
 def action_update(type_, id_, tlo_action, user=None, **kwargs):
@@ -212,7 +215,7 @@ def action_update(type_, id_, tlo_action, user=None, **kwargs):
                         tlo_action['date'])
         obj.save(username=user)
         return {'success': True, 'object': tlo_action}
-    except (ValidationError, TypeError), e:
+    except (ValidationError, TypeError) as e:
         return {'success': False, 'message': e}
 
 def description_update(type_, id_, description, user, **kwargs):
@@ -244,13 +247,13 @@ def description_update(type_, id_, description, user, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = six.moves.html_parser.HTMLParser()
     description = h.unescape(description)
     try:
         obj.description = description
         obj.save(username=user)
         return {'success': True, 'message': "Description set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def data_update(type_, id_, data, analyst):
@@ -282,13 +285,13 @@ def data_update(type_, id_, data, analyst):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = six.moves.html_parser.HTMLParser()
     data = h.unescape(data)
     try:
         obj.data = data
         obj.save(username=analyst)
         return {'success': True, 'message': "Data set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def get_favorites(analyst):
@@ -333,7 +336,7 @@ def get_favorites(analyst):
                   <tbody>
               '''
 
-    for type_, attr in field_dict.iteritems():
+    for type_, attr in six.iteritems(field_dict):
         if type_ in favorites:
             ids = [ObjectId(s) for s in favorites[type_]]
             objs = class_from_type(type_).objects(id__in=ids).only(attr)
@@ -406,7 +409,7 @@ def status_update(type_, id_, value="In Progress", user=None, **kwargs):
 
         obj.save(username=user)
         return {'success': True, 'value': value}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 
@@ -489,7 +492,7 @@ def add_releasability(type_, id_, name, user, **kwargs):
         obj.reload()
         return {'success': True,
                 'obj': obj.to_dict()['releasability']}
-    except Exception, e:
+    except Exception as e:
         return {'success': False,
                 'message': "Could not add releasability: %s" % e}
 
@@ -522,7 +525,7 @@ def add_releasability_instance(type_, _id, name, analyst, note=None):
         obj.reload()
         return {'success': True,
                 'obj': obj.to_dict()['releasability']}
-    except Exception, e:
+    except Exception as e:
         return {'success': False,
                 'message': "Could not add releasability instance: %s" % e}
 
@@ -553,7 +556,7 @@ def remove_releasability_instance(type_, _id, name, date, analyst):
         obj.reload()
         return {'success': True,
                 'obj': obj.to_dict()['releasability']}
-    except Exception, e:
+    except Exception as e:
         return {'success': False,
                 'message': "Could not remove releasability instance: %s" % e}
 
@@ -582,7 +585,7 @@ def remove_releasability(type_, _id, name, analyst):
         obj.reload()
         return {'success': True,
                 'obj': obj.to_dict()['releasability']}
-    except Exception, e:
+    except Exception as e:
         return {'success': False,
                 'message': "Could not remove releasability: %s" % e}
 
@@ -774,7 +777,7 @@ def source_add_update(type_, id_, action_type, source, method='',
         return {'success': False,
                 'message': ('Could not make source changes. '
                             'Refresh page and try again.')}
-    except (ValidationError, TypeError), e:
+    except (ValidationError, TypeError) as e:
         return {'success':False, 'message': e}
 
 def source_remove(type_, id_, name, date, user=None, **kwargs):
@@ -804,7 +807,7 @@ def source_remove(type_, id_, name, date, user=None, **kwargs):
                                    date=date)
         obj.save(username=user)
         return result
-    except (ValidationError, TypeError), e:
+    except (ValidationError, TypeError) as e:
         return {'success':False, 'message': e}
 
 def source_remove_all(obj_type, obj_id, name, analyst=None):
@@ -831,7 +834,7 @@ def source_remove_all(obj_type, obj_id, name, analyst=None):
                                    remove_all=True)
         obj.save(username=analyst)
         return result
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success':False, 'message': e}
 
 def get_sources(obj_type, obj_id, analyst):
@@ -1407,7 +1410,7 @@ def modify_source_access(analyst, data):
     try:
         user.save(username=analyst)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False,
                 'message': format_error(e)}
 
@@ -1423,12 +1426,12 @@ def datetime_parser(value):
     """
     if isinstance(value,datetime.datetime):
         return value
-    elif isinstance(value,basestring) and value:
+    elif isinstance(value,six.string_types) and value:
         return datetime.datetime.strptime(value, settings.PY_DATETIME_FORMAT)
     elif isinstance(value,dict):
         for k,v in value.items():
             # Make sure that date is in the key, value is a string, and val is not ''
-            if "date" in k and isinstance(v,basestring) and v:
+            if "date" in k and isinstance(v,six.string_types) and v:
                 value[k] = datetime.datetime.strptime(v, settings.PY_DATETIME_FORMAT)
         return value
     else:
@@ -1443,7 +1446,7 @@ def format_error(e):
     :returns: str
     """
 
-    return e.__class__.__name__+": "+unicode(e)
+    return e.__class__.__name__+": "+six.text_type(e)
 
 def toggle_item_state(type_, oid, analyst):
     """
@@ -1536,7 +1539,7 @@ def do_add_preferred_actions(obj_type, obj_id, username):
 
     try:
         obj.save(username=username)
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
     return {'success': True, 'object': actions}
@@ -1587,7 +1590,7 @@ def generate_regex(val):
 
     try:
         return {'$regex': re.compile('%s' % remove_quotes(val), re.I)}
-    except Exception, e:
+    except Exception as e:
         return {'error': 'Invalid Regular Expression: %s\n\n\t%s' % (val,
                                                                         str(e))}
 
@@ -1603,7 +1606,7 @@ def parse_search_term(term, force_full=False):
 
     # decode the term so we aren't dealing with weird encoded characters
     if force_full == False:
-        term = urllib.unquote(term)
+        term = six.moves.urllib.parse.unquote(term)
 
     search = {}
 
@@ -1942,7 +1945,7 @@ def check_query(qparams,user,obj):
         except:
             field = key
         # Check for mapping, reverse because we're going the other way
-        invmap = dict((v,k) for k, v in obj._db_field_map.iteritems())
+        invmap = dict((v,k) for k, v in six.iteritems(obj._db_field_map))
         if field in invmap:
             field = invmap[field]
         # Only allow query keys that exist in the object
@@ -1999,9 +2002,9 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     results['msg'] = ""
     results['crits_type'] = col_obj._meta['crits_type']
     sourcefilt = user_sources(user)
-    if isinstance(sort,basestring):
+    if isinstance(sort,six.string_types):
         sort = sort.split(',')
-    if isinstance(projection,basestring):
+    if isinstance(projection,six.string_types):
         projection = projection.split(',')
     if not projection:
         projection = []
@@ -2055,7 +2058,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
             if hasattr(doc, "sanitize_sources"):
                 doc.sanitize_sources(username="%s" % user, sources=sourcefilt)
 
-    except Exception, e:
+    except Exception as e:
         results['msg'] = "ERROR: %s. Sort performed on: %s" % (e,
                                                                ', '.join(sort))
         return results
@@ -2130,7 +2133,7 @@ def parse_query_request(request,col_obj):
                 base = field
                 extra = ""
             # Check for mapping, reverse because we're going the other way
-            invmap = dict((v,k) for k, v in col_obj._db_field_map.iteritems())
+            invmap = dict((v,k) for k, v in six.iteritems(col_obj._db_field_map))
             if base in invmap:
                 base = invmap[base]
             # Only allow query keys that exist in the object
@@ -2167,7 +2170,7 @@ def csv_export(request, col_obj, query={}):
     result = csv_query(col_obj, request.user, fields=opts['fields'],
                         sort=opts['sort'], query=query, limit=opts['limit'],
                         skip=opts['skip'])
-    if isinstance(result, basestring):
+    if isinstance(result, six.string_types):
         response = HttpResponse(result, content_type="text/csv")
         response['Content-Disposition'] = "attachment;filename=crits-%s-export.csv" % col_obj._meta['crits_type']
     else:
@@ -2214,7 +2217,7 @@ def get_query(col_obj,request):
         otype = request.GET.get('otype', None)
         if otype:
             search_type = search_type + "_" + otype
-        term = HTMLParser.HTMLParser().unescape(term)
+        term = six.moves.html_parser.HTMLParser().unescape(term)
         qdict = gen_global_query(col_obj,
                                  request.user.username,
                                  term,
@@ -2391,7 +2394,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     else:
                         doc[key] = "False"
                 elif key == "datatype":
-                    doc[key] = value.keys()[0]
+                    doc[key] = list(value.keys())[0]
                 elif key == "results":
                     doc[key] = len(doc[key])
                 elif key == "preferred":
@@ -2407,7 +2410,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 elif isinstance(value, list):
                     if value:
                         for item in value:
-                            if not isinstance(item, basestring):
+                            if not isinstance(item, six.string_types):
                                 break
                         else:
                             doc[key] = ",".join(value)
@@ -2438,7 +2441,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
             elif not url:
                 doc['url'] = None
             else:
-                doc['url'] = reverse(url, args=(unicode(doc[urlfieldparam]),))
+                doc['url'] = reverse(url, args=(six.text_type(doc[urlfieldparam]),))
     return response
 
 def jtable_ajax_delete(obj,request):
@@ -3156,7 +3159,7 @@ def generate_user_profile(username, request):
         final_samples = []
         ids = [ObjectId(s['_id']) for s in subscriptions['Sample']]
         samples = Sample.objects(id__in=ids).only('md5', 'filename')
-        m = map(itemgetter('_id'), subscriptions['Sample'])
+        m = list(map(itemgetter('_id'), subscriptions['Sample']))
         for sample in samples:
             s = sample.to_dict()
             s['md5'] = sample['md5']
@@ -3170,7 +3173,7 @@ def generate_user_profile(username, request):
         final_pcaps = []
         ids = [ObjectId(p['_id']) for p in subscriptions['PCAP']]
         pcaps = PCAP.objects(id__in=ids).only('md5', 'filename')
-        m = map(itemgetter('_id'), subscriptions['PCAP'])
+        m = list(map(itemgetter('_id'), subscriptions['PCAP']))
         for pcap in pcaps:
             p = pcap.to_dict()
             p['id'] = pcap.id
@@ -3185,7 +3188,7 @@ def generate_user_profile(username, request):
         emails = Email.objects(id__in=ids).only('from_address',
                                                 'sender',
                                                 'subject')
-        m = map(itemgetter('_id'), subscriptions['Email'])
+        m = list(map(itemgetter('_id'), subscriptions['Email']))
         for email in emails:
             e = email.to_dict()
             e['id'] = email.id
@@ -3198,7 +3201,7 @@ def generate_user_profile(username, request):
         final_indicators = []
         ids = [ObjectId(i['_id']) for i in subscriptions['Indicator']]
         indicators = Indicator.objects(id__in=ids).only('value', 'ind_type')
-        m = map(itemgetter('_id'), subscriptions['Indicator'])
+        m = list(map(itemgetter('_id'), subscriptions['Indicator']))
         for indicator in indicators:
             i = indicator.to_dict()
             i['id'] = indicator.id
@@ -3211,7 +3214,7 @@ def generate_user_profile(username, request):
         final_events = []
         ids = [ObjectId(v['_id']) for v in subscriptions['Event']]
         events = Event.objects(id__in=ids).only('title', 'description')
-        m = map(itemgetter('_id'), subscriptions['Event'])
+        m = list(map(itemgetter('_id'), subscriptions['Event']))
         for event in events:
             e = event.to_dict()
             e['id'] = event.id
@@ -3224,7 +3227,7 @@ def generate_user_profile(username, request):
         final_domains = []
         ids = [ObjectId(d['_id']) for d in subscriptions['Domain']]
         domains = Domain.objects(id__in=ids).only('domain')
-        m = map(itemgetter('_id'), subscriptions['Domain'])
+        m = list(map(itemgetter('_id'), subscriptions['Domain']))
         for domain in domains:
             d = domain.to_dict()
             d['id'] = domain.id
@@ -3237,7 +3240,7 @@ def generate_user_profile(username, request):
         final_ips = []
         ids = [ObjectId(a['_id']) for a in subscriptions['IP']]
         ips = IP.objects(id__in=ids).only('ip')
-        m = map(itemgetter('_id'), subscriptions['IP'])
+        m = list(map(itemgetter('_id'), subscriptions['IP']))
         for ip in ips:
             i = ip.to_dict()
             i['id'] = ip.id
@@ -3250,7 +3253,7 @@ def generate_user_profile(username, request):
         final_campaigns = []
         ids = [ObjectId(c['_id']) for c in subscriptions['Campaign']]
         campaigns = Campaign.objects(id__in=ids).only('name')
-        m = map(itemgetter('_id'), subscriptions['Campaign'])
+        m = list(map(itemgetter('_id'), subscriptions['Campaign']))
         for campaign in campaigns:
             c = campaign.to_dict()
             c['id'] = campaign.id
@@ -4057,7 +4060,7 @@ def ticket_add(type_, id_, ticket, user, **kwargs):
                              ticket['date'])
         obj.save(username=user)
         return {'success': True, 'object': ticket}
-    except (ValidationError, TypeError, KeyError), e:
+    except (ValidationError, TypeError, KeyError) as e:
         return {'success': False, 'message': e}
 
 def ticket_update(type_, id_, ticket, user=None, **kwargs):
@@ -4090,7 +4093,7 @@ def ticket_update(type_, id_, ticket, user=None, **kwargs):
                         ticket['date'])
         obj.save(username=user)
         return {'success': True, 'object': ticket}
-    except (ValidationError, TypeError, KeyError), e:
+    except (ValidationError, TypeError, KeyError) as e:
         return {'success': False, 'message': e}
 
 
@@ -4120,7 +4123,7 @@ def ticket_remove(type_, id_, date, user, **kwargs):
         obj.delete_ticket(date)
         obj.save(username=user)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def unflatten(dictionary):
@@ -4133,7 +4136,7 @@ def unflatten(dictionary):
     """
 
     resultDict = dict()
-    for key, value in dictionary.iteritems():
+    for key, value in six.iteritems(dictionary):
         parts = key.split(".")
         d = resultDict
         for part in parts[:-1]:
@@ -4339,7 +4342,7 @@ def get_role_details(rid, roles, analyst):
             return template, args
         show_roles = None
     if roles:
-        if isinstance(roles, basestring):
+        if isinstance(roles, six.string_types):
             roles = roles.split(',')
             roles = [r.strip() for r in roles]
         tmp = CRITsUser()

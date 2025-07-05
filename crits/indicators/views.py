@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import datetime
 import json
-import urllib
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
@@ -105,7 +107,7 @@ def remove_indicator(request, _id):
     :returns: :class:`django.http.HttpResponse`,
               :class:`django.http.HttpResponseRedirect`
     """
-    print('%s' % (request.user.username))
+    print(('%s' % (request.user.username)))
     result = indicator_remove(_id, username=(
                               '%s' % request.user.username))
     if result['success']:
@@ -128,7 +130,7 @@ def indicator_search(request):
     query[request.GET.get('search_type', '')] = request.GET.get('q', '').strip()
     #return render(request, 'error.html', {'error': query})
     return HttpResponseRedirect(reverse('crits-indicators-views-indicators_listing')
-                                + "?%s" % urllib.urlencode(query))
+                                + "?%s" % six.moves.urllib.parse.urlencode(query))
 
 @user_passes_test(user_can_view_data)
 def upload_indicator(request):

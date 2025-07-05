@@ -1,5 +1,5 @@
-#Django 2.0+ requires Python 3.x
-Django<2.0
+# Updated for Python 3 compatibility
+Django>=1.11,<2.0
 Pillow
 amqp
 anyjson
@@ -39,9 +39,9 @@ setuptools>=28.3.0
 simplejson
 six
 ushlex
-wsgiref
+# wsgiref is built-in for Python 3
 olefile
-pycrypto
+pycryptodome
 pyimpfuzzy
 chardet
 qrcode

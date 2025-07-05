@@ -1,4 +1,6 @@
+from __future__ import absolute_import
 import datetime
+import six
 
 try:
 	from django_mongoengine import Document
@@ -204,7 +206,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         :type aliases: list
         """
 
-        if isinstance(aliases, basestring):
+        if isinstance(aliases, six.string_types):
             aliases = aliases.split(',')
         aliases = [a.strip() for a in aliases if a != '']
         existing_aliases = None
@@ -227,7 +229,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         :type tags: list
         """
 
-        if isinstance(tags, basestring):
+        if isinstance(tags, six.string_types):
             tags = tags.split(',')
         tags = [t.strip() for t in tags if t != '']
         existing_tags = None

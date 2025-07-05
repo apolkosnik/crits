@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from django.conf import settings
 
 from crits.config.config import CRITsConfig
@@ -41,5 +42,5 @@ def modify_configuration(forms, analyst):
     try:
         config.save(username=analyst)
         return {'message': "Success!"}
-    except Exception, e:
+    except Exception as e:
         return {'message': "Failure: %s" % e}

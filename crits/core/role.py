@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import logging
 
 from mongoengine import Document, EmbeddedDocument
@@ -24,6 +25,7 @@ from crits.signatures.signature import SignatureAccess
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.source_access import SourceAccess
+import six
 
 logger = logging.getLogger(__name__)
 
@@ -183,17 +185,17 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
                        'description',
                        'unsupported_attrs']
 
-        for p in self._data.iterkeys():
-            if p in settings.CRITS_TYPES.iterkeys():
+        for p in six.iterkeys(self._data):
+            if p in six.iterkeys(settings.CRITS_TYPES):
                 attr = getattr(self, p)
                 # Modify the attributes.
-                for x in attr._data.iterkeys():
+                for x in six.iterkeys(attr._data):
                     setattr(attr, x, True)
                 # Set the attribute on the ACL.
                 setattr(self, p, attr)
             elif p == "sources":
                 for s in getattr(self, p):
-                    for x in s._data.iterkeys():
+                    for x in six.iterkeys(s._data):
                         if x != "name":
                             setattr(s, x, True)
             elif p not in dont_modify:

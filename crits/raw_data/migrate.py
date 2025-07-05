@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 def migrate_raw_data(self):
     """
     Migrate to the latest schema version.

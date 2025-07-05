@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import cgi
 import re
 import string
@@ -190,7 +191,7 @@ def is_tlo(value):
     :returns: boolean
     """
 
-    if value in settings.CRITS_TYPES.keys():
+    if value in list(settings.CRITS_TYPES.keys()):
         return True
     else:
         return False
@@ -228,7 +229,7 @@ def is_indicator_type(value):
     :returns: bool
     """
 
-    if value in IndicatorTypes.values():
+    if value in list(IndicatorTypes.values()):
         return True
     else:
         return False

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 def migrate_pcap(self):
     """
     Migrate to latest schema version.

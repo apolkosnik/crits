@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import json
 
 from django import forms
@@ -266,7 +267,7 @@ def parse_bulk_upload(request, parse_row_function, add_new_function, formdict, c
                                            'label': entry['label'],
                                            'message': "At (" + str(rowCounter) + ", " + entry['label'] + "): " + message});
 
-        except Exception,e:
+        except Exception as e:
             import traceback
             traceback.print_exc()
 
