@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mongodb-test:
+    image: mongo:6.0
+    container_name: crits-mongodb-test
+    restart: "no"
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_test_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: crits_test
+    networks:
+      - crits-test-network
+
+  crits-test:
+    build: 
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: crits-test-app
+    restart: "no"
+    depends_on:
+      - mongodb-test
+    environment:
+      - DJANGO_SETTINGS_MODULE=test_settings
+      - MONGO_HOST=mongodb-test
+      - MONGO_PORT=27017
+      - MONGO_DATABASE=crits_test
+      - PYTHONPATH=/crits
+    networks:
+      - crits-test-network
+    volumes:
+      - .:/crits
+      - test_logs:/crits/logs
+    command: python3 -m pytest tests/ -v --tb=short
+
+volumes:
+  mongodb_test_data:
+  test_logs:
+
+networks:
+  crits-test-network:
+    driver: bridge
