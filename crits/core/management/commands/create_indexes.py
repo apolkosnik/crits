@@ -1,10 +1,13 @@
-import pymongo
 from django.core.management.base import BaseCommand
 
 from django.conf import settings
 
 
 from crits.core.mongo_tools import mongo_connector
+
+# PyMongo index direction constants
+ASCENDING = 1
+DESCENDING = -1
 
 class Command(BaseCommand):
     """
@@ -130,7 +133,7 @@ def create_indexes():
     events.create_index("relationships.value", background=True)
     events.create_index("campaign.name", background=True)
     events.create_index("source.name", background=True)
-    events.create_index([("created", pymongo.DESCENDING)], background=True)
+    events.create_index([("created", DESCENDING)], background=True)
     events.create_index("status", background=True)
     events.create_index("favorite", background=True)
     events.create_index("event_type", background=True)
@@ -145,8 +148,8 @@ def create_indexes():
     indicators.create_index("objects.value", background=True)
     indicators.create_index("relationships.value", background=True)
     indicators.create_index("campaign.name", background=True)
-    indicators.create_index([("created", pymongo.DESCENDING)], background=True)
-    indicators.create_index([("modified", pymongo.DESCENDING)], background=True)
+    indicators.create_index([("created", DESCENDING)], background=True)
+    indicators.create_index([("modified", DESCENDING)], background=True)
     indicators.create_index("type", background=True)
     indicators.create_index("status", background=True)
     indicators.create_index("source.name", background=True)
@@ -157,8 +160,8 @@ def create_indexes():
     ips.create_index("objects.value", background=True)
     ips.create_index("relationships.value", background=True)
     ips.create_index("campaign.name", background=True)
-    ips.create_index([("created", pymongo.DESCENDING)], background=True)
-    ips.create_index([("modified", pymongo.DESCENDING)], background=True)
+    ips.create_index([("created", DESCENDING)], background=True)
+    ips.create_index([("modified", DESCENDING)], background=True)
     ips.create_index("source.name", background=True)
     ips.create_index("status", background=True)
     ips.create_index("type", background=True)
@@ -170,8 +173,8 @@ def create_indexes():
         objects_files.create_index("md5", background=True)
 
         objects_chunks = mongo_connector('%s.chunks' % settings.COL_OBJECTS)
-        objects_chunks.create_index([("files_id",pymongo.ASCENDING),
-                                ("n", pymongo.ASCENDING)],
+        objects_chunks.create_index([("files_id",ASCENDING),
+                                ("n", ASCENDING)],
                                unique=True)
 
     notifications = mongo_connector(settings.COL_NOTIFICATIONS)
@@ -189,7 +192,7 @@ def create_indexes():
     pcaps.create_index("filename", background=True)
     pcaps.create_index("description", background=True)
     pcaps.create_index("length", background=True)
-    pcaps.create_index([("modified", pymongo.DESCENDING)], background=True)
+    pcaps.create_index([("modified", DESCENDING)], background=True)
     pcaps.create_index("source.name", background=True)
     pcaps.create_index("status", background=True)
     pcaps.create_index("favorite", background=True)
@@ -200,8 +203,8 @@ def create_indexes():
         pcaps_files.create_index("md5", background=True)
 
         pcaps_chunks = mongo_connector('%s.chunks' % settings.COL_PCAPS)
-        pcaps_chunks.create_index([("files_id", pymongo.ASCENDING),
-                                ("n", pymongo.ASCENDING)],
+        pcaps_chunks.create_index([("files_id", ASCENDING),
+                                ("n", ASCENDING)],
                                unique=True)
 
     raw_data = mongo_connector(settings.COL_RAW_DATA)
@@ -210,7 +213,7 @@ def create_indexes():
     raw_data.create_index("title", background=True)
     raw_data.create_index("data_type", background=True)
     raw_data.create_index("version", background=True)
-    raw_data.create_index([("modified", pymongo.DESCENDING)], background=True)
+    raw_data.create_index([("modified", DESCENDING)], background=True)
     raw_data.create_index("source.name", background=True)
     raw_data.create_index("objects.value", background=True)
     raw_data.create_index("relationships.value", background=True)
@@ -236,8 +239,8 @@ def create_indexes():
     samples.create_index("analysis.results.result", background=True)
     samples.create_index("analysis.results.md5", background=True)
     samples.create_index("bucket_list", background=True)
-    samples.create_index([("created", pymongo.DESCENDING)], background=True)
-    samples.create_index([("modified", pymongo.DESCENDING)], background=True)
+    samples.create_index([("created", DESCENDING)], background=True)
+    samples.create_index([("modified", DESCENDING)], background=True)
     samples.create_index("favorite", background=True)
     samples.create_index("status", background=True)
 
@@ -246,8 +249,8 @@ def create_indexes():
         samples_files.create_index("md5", background=True)
 
         samples_chunks = mongo_connector('%s.chunks' % settings.COL_SAMPLES)
-        samples_chunks.create_index([("files_id", pymongo.ASCENDING),
-                                  ("n", pymongo.ASCENDING)],
+        samples_chunks.create_index([("files_id", ASCENDING),
+                                  ("n", ASCENDING)],
                                  unique=True)
 
     screenshots = mongo_connector(settings.COL_SCREENSHOTS)
@@ -262,7 +265,7 @@ def create_indexes():
     signature.create_index("data_type_max_version", background=True)
     signature.create_index("data_type_dependency", background=True)
     signature.create_index("version", background=True)
-    signature.create_index([("modified", pymongo.DESCENDING)], background=True)
+    signature.create_index([("modified", DESCENDING)], background=True)
     signature.create_index("source.name", background=True)
     signature.create_index("objects.value", background=True)
     signature.create_index("relationships.value", background=True)

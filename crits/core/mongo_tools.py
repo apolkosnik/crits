@@ -3,7 +3,7 @@ if settings.FILE_DB == settings.S3:
     from crits.core.s3_tools import get_file_s3
 
 import gridfs
-import pymongo
+from mongoengine.connection import get_db
 
 import magic
 import logging
@@ -22,29 +22,26 @@ class MongoError(Exception):
 # Setup standard connector to the MongoDB instance for use in any functions
 def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
-    Connect to the mongo database if you need to use PyMongo directly and not
-    use MongoEngine. Uses pooled connection created in settings.py rather than
-    opening a fresh connection every call.
+    Connect to the mongo database using MongoEngine's connection.
+    This provides a PyMongo collection object for legacy operations.
 
     :param collection: the collection to use.
     :type collection: str
     :param preference: PyMongo Read Preference for ReplicaSet/clustered DBs.
     :type preference: str.
-    :returns: :class:`pymongo.MongoClient`,
+    :returns: :class:`pymongo.Collection`,
               :class:`crits.core.mongo_tools.MongoError`
     """
 
     try:
-        return settings.PY_DB[collection]
+        db = get_db()
+        return db[collection]
     except Exception as e:
         raise MongoError("MongoError: %s" % e)
 
 def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
-    Connect to the mongo database if you need to use PyMongo directly and not
-    use MongoEngine. Uses pooled connection created in settings.py rather than
-    opening a fresh connection every call.
-    
+    Connect to the mongo database using MongoEngine's connection.
     Used specifically for accessing GridFS.
 
     :param collection: the collection to use.
@@ -56,7 +53,8 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
 
     try:
-        return gridfs.GridFS(settings.PY_DB, collection)
+        db = get_db()
+        return gridfs.GridFS(db, collection)
     except Exception as e:
         raise MongoError("MongoError: %s" % e)
 

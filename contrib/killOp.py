@@ -1,6 +1,6 @@
 import sys
 from optparse import OptionParser
-import pymongo
+from mongoengine.connection import get_db
 
 parser = OptionParser()
 parser.add_option("-o", "--opid", dest="opid", default=None,
@@ -20,9 +20,9 @@ else:
         opids.append(d.strip())
 
 print "Kill Sequence:"
-conn = pymongo.MongoClient()
+db = get_db()
 # db.$cmd.sys.killop.findOne({op:1234})
 for op in opids:
     print "Killing: %s" % op
-    result = conn['admin']['$cmd.sys.killop'].find_one({'op': "%s" % op})
+    result = db.connection.admin['$cmd.sys.killop'].find_one({'op': "%s" % op})
     print "\t%s" % result

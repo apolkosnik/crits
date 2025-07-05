@@ -1,6 +1,6 @@
 from optparse import OptionParser
 import pprint
-import pymongo
+from mongoengine.connection import get_db
 
 def main():
     parser = OptionParser()
@@ -26,8 +26,8 @@ def main():
         quiet = True
     if options.opid is not None:
         opid = options.opid
-    conn = pymongo.MongoClient()
-    all_ops = conn['admin']['$cmd.sys.inprog'].find_one('inprog')['inprog']
+    db = get_db()
+    all_ops = db.connection.admin['$cmd.sys.inprog'].find_one('inprog')['inprog']
     sync_ops = []
     active_ops = []
     for op in all_ops:

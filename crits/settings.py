@@ -7,7 +7,7 @@ import sys
 import django
 import subprocess
 
-from pymongo import ReadPreference, MongoClient
+from pymongo import ReadPreference
 from mongoengine import connect
 from mongoengine import __version__ as mongoengine_version
 
@@ -199,24 +199,21 @@ else:
     connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL,
             replicaset=MONGO_REPLICASET)
 
-# Get config from DB via pymongo
-def connect_pymongo(dbs=MONGO_DATABASE, dbhost=MONGO_HOST, dbport=MONGO_PORT, dbuser=MONGO_USER, dbpass=MONGO_PASSWORD, dbssl=MONGO_SSL, w=1):
-    from pymongo import version_tuple as pymongo_versiont
-    if pymongo_versiont >= (3,0):
-        c = MongoClient(dbhost, dbport, ssl=dbssl, w=w) #, connect=False)
-    else:
-        c = MongoClient(dbhost, dbport, ssl=dbssl, w=w)
-    dbase = c[dbs]
-    if dbuser:
-        dbase.authenticate(dbuser, dbpass)
-    return dbase
+# Get config from DB via mongoengine
+def get_crits_config():
+    """Get CRITs configuration using MongoEngine."""
+    try:
+        from crits.config.config import CRITsConfig
+        config = CRITsConfig.objects().first()
+        if config:
+            return config.to_mongo().to_dict()
+        else:
+            return {}
+    except Exception:
+        # Fallback to empty config if there's any issue
+        return {}
 
-PY_DB = connect_pymongo(MONGO_DATABASE, MONGO_HOST, MONGO_PORT, MONGO_USER, MONGO_PASSWORD, MONGO_SSL, 1)
-
-coll = PY_DB[COL_CONFIG]
-crits_config = coll.find_one({})
-if not crits_config:
-    crits_config = {}
+crits_config = get_crits_config()
 
 # UberAdmin role. Has access to everything, can do everything, etc.
 ADMIN_ROLE = "UberAdmin"
