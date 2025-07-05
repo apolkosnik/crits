@@ -1,9 +1,6 @@
 from __future__ import absolute_import
 import six
-try:
-	from django_mongoengine import Document
-except ImportError:
-	from mongoengine import Document
+from mongoengine import Document
 
 from mongoengine import StringField, ListField, BooleanField
 

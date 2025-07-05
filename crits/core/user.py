@@ -41,10 +41,7 @@ import uuid
 from hashlib import sha1
 import six
 
-try:
-    from django_mongoengine import Document
-except ImportError:
-    from mongoengine import Document
+from mongoengine import Document
 
 from mongoengine import EmbeddedDocument, StringField, DateTimeField, ListField
 from mongoengine import BooleanField, ObjectIdField, EmailField

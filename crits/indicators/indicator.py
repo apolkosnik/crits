@@ -2,10 +2,7 @@ from __future__ import absolute_import
 import datetime
 import six
 
-try:
-	from django_mongoengine import Document
-except ImportError:
-	from mongoengine import Document
+from mongoengine import Document
 
 from mongoengine import EmbeddedDocument, BooleanField
 from mongoengine import StringField, ListField

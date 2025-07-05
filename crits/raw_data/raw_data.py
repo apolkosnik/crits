@@ -3,10 +3,7 @@ import datetime
 import uuid
 
 from dateutil.parser import parse
-try:
-	from django_mongoengine import Document
-except ImportError:
-	from mongoengine import Document
+from mongoengine import Document
 
 from mongoengine import StringField, IntField, EmbeddedDocument
 from mongoengine import ListField, EmbeddedDocumentField, UUIDField

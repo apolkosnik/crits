@@ -1,10 +1,7 @@
 from __future__ import absolute_import
 import datetime
 
-try:
-	from django_mongoengine import Document
-except ImportError:
-	from mongoengine import Document
+from mongoengine import Document
 
 from mongoengine import ObjectIdField, StringField, ListField
 from django.conf import settings

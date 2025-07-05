@@ -15,10 +15,7 @@ except ImportError:
     from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
-try:
-    from django_mongoengine import Document
-except ImportError:
-    from mongoengine import Document
+from mongoengine import Document
 
 from mongoengine import EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
@@ -31,15 +28,9 @@ except ImportError:
 
 # Determine if we should be caching queries or not.
 if settings.QUERY_CACHING:
-    try:
-        from django_mongoengine import QuerySet as QS
-    except ImportError:
-        from mongoengine import QuerySet as QS
+    from mongoengine import QuerySet as QS
 else:
-    try:
-        from django_mongoengine import QuerySetNoCache as QS
-    except ImportError:
-        from mongoengine import QuerySetNoCache as QS
+    from mongoengine import QuerySetNoCache as QS
 
 from pprint import pformat
 

@@ -429,9 +429,11 @@ STATICFILES_DIRS = (
 )
 
 
-AUTH_USER_MODEL = 'mongo_auth.MongoUser'
+# Use Django's default user model since we're not using django-mongoengine
+AUTH_USER_MODEL = 'auth.User'
 
-MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
+# CRITs custom user document
+CRITS_USER_DOCUMENT = 'crits.core.user.CRITsUser'
 # http://django-debug-toolbar.readthedocs.org/en/latest/configuration.html#debug-toolbar-panels
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
@@ -486,205 +488,68 @@ else:
         'crits.core.views.user_context',
     )
 
-if old_mongoengine:
-    INSTALLED_APPS = (
-        'crits.core',
-        'crits.dashboards',
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.messages',
-        'django.contrib.sessions',
-        'django.contrib.sites',
-        'django.contrib.staticfiles',
-        'crits.actors',
-        'crits.campaigns',
-        'crits.certificates',
-        'crits.domains',
-        'crits.emails',
-        'crits.events',
-        'crits.indicators',
-        'crits.ips',
-        'crits.locations',
-        'crits.objects',
-        'crits.pcaps',
-        'crits.raw_data',
-        'crits.relationships',
-        'crits.samples',
-        'crits.screenshots',
-        'crits.services',
-        'crits.signatures',
-        'crits.stats',
-        'crits.targets',
-        'tastypie',
-        'tastypie_mongoengine',
-        'mongoengine.django.mongo_auth',
+# Django 4.2+ configuration
+INSTALLED_APPS = (
+    'crits.core',
+    'crits.dashboards',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.messages',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.staticfiles',
+    'crits.actors',
+    'crits.campaigns',
+    'crits.certificates',
+    'crits.domains',
+    'crits.emails',
+    'crits.events',
+    'crits.indicators',
+    'crits.ips',
+    'crits.locations',
+    'crits.objects',
+    'crits.pcaps',
+    'crits.raw_data',
+    'crits.relationships',
+    'crits.samples',
+    'crits.screenshots',
+    'crits.services',
+    'crits.signatures',
+    'crits.stats',
+    'crits.targets',
+    'tastypie',
+)
 
-
+if ENABLE_DT:
+    INSTALLED_APPS += (
+        'debug_toolbar',
     )
-    if ENABLE_DT:
-        INSTALLED_APPS += (
-            'template_timings_panel',
-            'template_profiler_panel',
-            'debug_toolbar_mongo',
-            'vcs_info_panel',
-            'debug_toolbar',
-        )
 
-    _MIDDLEWARE = (
-    'django.middleware.common.CommonMiddleware',
+_MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #'crits.core.user.AuthenticationMiddleware',
-    )
-    # crits.core.user.AuthenticationMiddleware' # Only needed for mongoengine<0.10
-    if ENABLE_DT:
-        _MIDDLEWARE += ( 
-            'debug_toolbar.middleware.DebugToolbarMiddleware',
-        )
+]
 
-    if django.VERSION >= (1,8,0):
-        _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
-    # Only needed for mongoengine<0.10
-    _MIDDLEWARE += ('crits.core.user.AuthenticationMiddleware',)
+if ENABLE_DT:
+    _MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
-    SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
-    #SESSION_ENGINE = 'mongoengine.django.sessions'
-    #SESSION_ENGINE = 'django_mongoengine.sessions'
-    SESSION_SERIALIZER = 'mongoengine.django.sessions.BSONSerializer'
-
-    AUTHENTICATION_BACKENDS = (
-        'django.contrib.auth.backends.ModelBackend',
-        'crits.core.user.CRITsAuthBackend',
-    )   # not needed on good old mongoengine
-        #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
-
-else:
-    # new mongoengine (0.10+)
-    INSTALLED_APPS = (
-        'crits.core',
-        'crits.dashboards',
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.messages',
-        'django.contrib.sessions',
-        'django.contrib.sites',
-        'django.contrib.staticfiles',
-        'crits.actors',
-        'crits.campaigns',
-        'crits.certificates',
-        'crits.domains',
-        'crits.emails',
-        'crits.events',
-        'crits.indicators',
-        'crits.ips',
-        'crits.locations',
-        'crits.objects',
-        'crits.pcaps',
-        'crits.raw_data',
-        'crits.relationships',
-        'crits.samples',
-        'crits.screenshots',
-        'crits.services',
-        'crits.signatures',
-        'crits.stats',
-        'crits.targets',
-        'tastypie',
-        'tastypie_mongoengine',
-        'django_mongoengine',
-        'django_mongoengine.mongo_auth',
-    )
-        
-    if ENABLE_DT:
-        INSTALLED_APPS += ( 
-            'template_timings_panel',
-            'template_profiler_panel',
-            'debug_toolbar_mongo',
-            'vcs_info_panel',
-            'debug_toolbar',
-        )
-
-    _MIDDLEWARE = (
-        'django.middleware.common.CommonMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-        'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.messages.middleware.MessageMiddleware',
-        'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    )
-    if ENABLE_DT:
-        _MIDDLEWARE += (
-            'debug_toolbar.middleware.DebugToolbarMiddleware',
-
-        )
-
-    if django.VERSION >= (1,8,0):
-        _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
-
-    SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
-    #SESSION_ENGINE = 'django_mongoengine.sessions'
-
-    SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
-
-    AUTHENTICATION_BACKENDS = (
-
-        'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
-        'crits.core.user.CRITsAuthBackend',
-    )        
-        #'django.contrib.auth.backends.ModelBackend',
-        #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'crits.core.user.CRITsAuthBackend',
+)
 
 if REMOTE_USER:
     AUTHENTICATION_BACKENDS = (
         'crits.core.user.CRITsRemoteUserBackend',
     )
-    if old_mongoengine:
-        _MIDDLEWARE = (
-            'django.middleware.common.CommonMiddleware',
-            'django.contrib.sessions.middleware.SessionMiddleware',
-            'django.contrib.auth.middleware.AuthenticationMiddleware',
-            'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-            'django.contrib.messages.middleware.MessageMiddleware',
-            'django.middleware.clickjacking.XFrameOptionsMiddleware',
-            'django.middleware.csrf.CsrfViewMiddleware',
-        )
-        if django.VERSION >= (1,8,0):
-            _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
-
-        _MIDDLEWARE += (
-            'crits.core.user.AuthenticationMiddleware',
-            'django.contrib.auth.middleware.RemoteUserMiddleware',
-        )
-
-        if ENABLE_DT:
-            _MIDDLEWARE += (
-                'debug_toolbar.middleware.DebugToolbarMiddleware',
-            )
-    else:
-        _MIDDLEWARE = (
-            'django.middleware.common.CommonMiddleware',
-            'django.contrib.sessions.middleware.SessionMiddleware',
-            'django.contrib.auth.middleware.AuthenticationMiddleware',
-            'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-            'django.contrib.messages.middleware.MessageMiddleware',
-            'django.middleware.clickjacking.XFrameOptionsMiddleware',
-            'django.middleware.csrf.CsrfViewMiddleware',
-            'django.contrib.auth.middleware.RemoteUserMiddleware',
-        )
-        if ENABLE_DT:
-            _MIDDLEWARE += ( 
-                'debug_toolbar.middleware.DebugToolbarMiddleware',
-            )
-
-        if django.VERSION >= (1,8,0):
-            _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
-
-        _MIDDLEWARE += ('django.contrib.auth.middleware.RemoteUserMiddleware',)
+    _MIDDLEWARE.append('django.contrib.auth.middleware.RemoteUserMiddleware')
 
 MONGODB_DATABASES = {
     "default": {
@@ -819,31 +684,25 @@ REMOTE_USER_META = 'REMOTE_USER'
 
 
 
-if StrictVersion(DJANGO_VERSION) < StrictVersion('1.10.0'):
-    MIDDLEWARE_CLASSES = _MIDDLEWARE
-else:
-    MIDDLEWARE = _MIDDLEWARE
+# Django 4.2+ uses MIDDLEWARE only
+MIDDLEWARE = _MIDDLEWARE
 
-if StrictVersion(DJANGO_VERSION) < StrictVersion('1.8.0'):
-    print ("Django  versions prior to 1.8.0 are not supported! Please consider upgrading.")
-    TEMPLATE_DEBUG = _TEMPLATE_DEBUG
-    TEMPLATE_DIRS = _TEMPLATE_DIRS
-    TEMPLATE_CONTEXT_PROCESSORS = _TEMPLATE_CONTEXT_PROCESSORS
-else:
-    TEMPLATES = [
-        {
-            'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            #'APP_DIRS': False,'
-            'DIRS': _TEMPLATE_DIRS,
-            'OPTIONS': {
-                #'dirs' : #_TEMPLATE_DIRS,
-                'context_processors' : _TEMPLATE_CONTEXT_PROCESSORS,
-                'debug' : _TEMPLATE_DEBUG,
-                'loaders' : _TEMPLATE_LOADERS,
+# Django 3.2+ requires DEFAULT_AUTO_FIELD
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-            },
+# Django 4.2+ template configuration
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': _TEMPLATE_DIRS,
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': _TEMPLATE_CONTEXT_PROCESSORS,
+            'debug': _TEMPLATE_DEBUG,
+            'loaders': _TEMPLATE_LOADERS if not _TEMPLATE_DEBUG else None,
         },
-    ]
+    },
+]
 
 
 # Import custom settings if it exists

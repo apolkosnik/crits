@@ -3,34 +3,35 @@ import imp
 import os
 
 from django.conf import settings
-from django.conf.urls import include, url
+from django.conf.urls import include
+from django.urls import path, re_path
 
 urlpatterns = [
 
-    url(r'^', include('crits.core.urls')),                        # Core
-    url(r'^dashboards/', include('crits.dashboards.urls')),       # Dashboard
-    url(r'^actors/', include('crits.actors.urls')),               # Actors
-    url(r'^backdoors/', include('crits.backdoors.urls')),         # Backdoors
-    url(r'^campaigns/', include('crits.campaigns.urls')),         # Campaigns
-    url(r'^certificates/', include('crits.certificates.urls')),   # Certificates
-    url(r'^comments/', include('crits.comments.urls')),           # Comments
-    url(r'^domains/', include('crits.domains.urls')),             # Domains
-    url(r'^emails/', include('crits.emails.urls')),               # Emails
-    url(r'^events/', include('crits.events.urls')),               # Events
-    url(r'^exploits/', include('crits.exploits.urls')),           # Exploits
-    url(r'^indicators/', include('crits.indicators.urls')),       # Indicators
-    url(r'^ips/', include('crits.ips.urls')),                     # IPs
-    url(r'^locations/', include('crits.locations.urls')),         # Locations
-    url(r'^notifications/', include('crits.notifications.urls')), # Notifications
-    url(r'^objects/', include('crits.objects.urls')),             # Objects
-    url(r'^pcaps/', include('crits.pcaps.urls')),                 # PCAPs
-    url(r'^raw_data/', include('crits.raw_data.urls')),           # Raw Data
-    url(r'^relationships/', include('crits.relationships.urls')), # Relationships
-    url(r'^samples/', include('crits.samples.urls')),             # Samples
-    url(r'^screenshots/', include('crits.screenshots.urls')),     # Screenshots
-    url(r'^services/', include('crits.services.urls')),           # Services
-    url(r'^signatures/', include('crits.signatures.urls')),       # Signatures
-    url(r'^targets/', include('crits.targets.urls')),             # Targets
+    re_path(r'^', include('crits.core.urls')),                        # Core
+    path('dashboards/', include('crits.dashboards.urls')),            # Dashboard
+    path('actors/', include('crits.actors.urls')),                    # Actors
+    path('backdoors/', include('crits.backdoors.urls')),              # Backdoors
+    path('campaigns/', include('crits.campaigns.urls')),              # Campaigns
+    path('certificates/', include('crits.certificates.urls')),        # Certificates
+    path('comments/', include('crits.comments.urls')),                # Comments
+    path('domains/', include('crits.domains.urls')),                  # Domains
+    path('emails/', include('crits.emails.urls')),                    # Emails
+    path('events/', include('crits.events.urls')),                    # Events
+    path('exploits/', include('crits.exploits.urls')),                # Exploits
+    path('indicators/', include('crits.indicators.urls')),            # Indicators
+    path('ips/', include('crits.ips.urls')),                          # IPs
+    path('locations/', include('crits.locations.urls')),              # Locations
+    path('notifications/', include('crits.notifications.urls')),      # Notifications
+    path('objects/', include('crits.objects.urls')),                  # Objects
+    path('pcaps/', include('crits.pcaps.urls')),                      # PCAPs
+    path('raw_data/', include('crits.raw_data.urls')),                # Raw Data
+    path('relationships/', include('crits.relationships.urls')),      # Relationships
+    path('samples/', include('crits.samples.urls')),                  # Samples
+    path('screenshots/', include('crits.screenshots.urls')),          # Screenshots
+    path('services/', include('crits.services.urls')),                # Services
+    path('signatures/', include('crits.signatures.urls')),            # Signatures
+    path('targets/', include('crits.targets.urls')),                  # Targets
 ]
 
 # Error overrides
@@ -97,7 +98,7 @@ if settings.ENABLE_API:
                     except Exception as e:
                         pass
 
-    urlpatterns.append(url(r'^api/', include(v1_api.urls)))
+    urlpatterns.append(path('api/', include(v1_api.urls)))
 
 # This code allows static content to be served up by the development server
 if settings.DEVEL_INSTANCE:
@@ -106,11 +107,11 @@ if settings.DEVEL_INSTANCE:
     if _media_url.startswith('/'):
         _media_url = _media_url[1:]
         urlpatterns.append(
-            url(r'^%s(?P<path>.*)$' % _media_url, serve, {'document_root': settings.MEDIA_ROOT}))
+            re_path(r'^%s(?P<path>.*)$' % _media_url, serve, {'document_root': settings.MEDIA_ROOT}))
     del(_media_url, serve)
 
 if settings.ENABLE_DT:
     import debug_toolbar
     urlpatterns = [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
+        path('__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
