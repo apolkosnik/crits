@@ -4,6 +4,7 @@ from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
+    re_path(r'^$', views.indicators_listing, name='crits-indicators-views-indicators_listing_root'),
     re_path(r'^details/(?P<indicator_id>\w+)/$', views.indicator, name='crits-indicators-views-indicator'),
     re_path(r'^search/$', views.indicator_search, name='crits-indicators-views-indicator_search'),
     re_path(r'^upload/$', views.upload_indicator, name='crits-indicators-views-upload_indicator'),

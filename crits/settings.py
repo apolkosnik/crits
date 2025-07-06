@@ -13,7 +13,10 @@ from pymongo import ReadPreference
 from mongoengine import connect
 from mongoengine import __version__ as mongoengine_version
 
-from distutils.version import StrictVersion
+try:
+    from distutils.version import StrictVersion
+except ImportError:
+    from packaging.version import Version as StrictVersion
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -79,7 +82,7 @@ else:
     CSRF_COOKIE_HTTPONLY = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = False
     SECURE_HSTS_SECONDS = 0 #change this to non-zero for more security
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
@@ -196,6 +199,7 @@ else:
 def get_crits_config():
     """Get CRITs configuration using MongoEngine."""
     try:
+        # Import here to avoid circular dependency issues
         from crits.config.config import CRITsConfig
         config = CRITsConfig.objects().first()
         if config:
@@ -206,7 +210,11 @@ def get_crits_config():
         # Fallback to empty config if there's any issue
         return {}
 
-crits_config = get_crits_config()
+# Try to get config from database, but use defaults if not available
+try:
+    crits_config = get_crits_config()
+except Exception:
+    crits_config = {}
 
 # Set defaults for settings that might not be in database yet
 if not crits_config:
@@ -242,6 +250,9 @@ if crits_config.get('email_port', None):
 ENABLE_API =                crits_config.get('enable_api', False)
 ENABLE_TOASTS =             crits_config.get('enable_toasts', False)
 GIT_REPO_URL =              crits_config.get('git_repo_url', '')
+GIT_BRANCH =                crits_config.get('git_branch', 'master')
+GIT_HASH =                  crits_config.get('git_hash', '')
+GIT_HASH_LONG =             crits_config.get('git_hash_long', '')
 HTTP_PROXY =                crits_config.get('http_proxy', None)
 INSTANCE_NAME =             crits_config.get('instance_name', 'My Instance')
 INSTANCE_URL =              crits_config.get('instance_url', '')
@@ -268,12 +279,13 @@ TIME_ZONE =                 crits_config.get('timezone', 'America/New_York')
 ZIP7_PATH =                 crits_config.get('zip7_path', '/usr/bin/7z')
 ZIP7_PASSWORD =             crits_config.get('zip7_password', 'infected')
 REMOTE_USER =               crits_config.get('remote_user', False)
-PASSWORD_COMPLEXITY_REGEX = crits_config.get('password_complexity_regex', '(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$')
+PASSWORD_COMPLEXITY_REGEX = crits_config.get('password_complexity_regex', r'(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$')
 PASSWORD_COMPLEXITY_DESC =  crits_config.get('password_complexity_desc', '8 characters, at least 1 capital, 1 lowercase and 1 number/special')
 DEPTH_MAX =                 crits_config.get('depth_max', '10')
 TOTAL_MAX =                 crits_config.get('total_max', '250')
 REL_MAX =                   crits_config.get('rel_max', '50')
 TOTP =                      crits_config.get('totp', False)
+HIDE_GIT_HASH =             crits_config.get('hide_git_hash', False)
 
 
 COLLECTION_TO_BUCKET_MAPPING = {
@@ -434,14 +446,14 @@ MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
 # http://django-debug-toolbar.readthedocs.org/en/latest/configuration.html#debug-toolbar-panels
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
-    'vcs_info_panel.panels.GitInfoPanel',
+    # 'vcs_info_panel.panels.GitInfoPanel',
     'debug_toolbar.panels.timer.TimerPanel',
     'debug_toolbar.panels.settings.SettingsPanel',
     'debug_toolbar.panels.headers.HeadersPanel',
     'debug_toolbar.panels.request.RequestPanel',
-    'template_timings_panel.panels.TemplateTimings.TemplateTimings',
-    'template_profiler_panel.panels.template.TemplateProfilerPanel',
-    'debug_toolbar_mongo.panel.MongoDebugPanel',
+    # 'template_timings_panel.panels.TemplateTimings.TemplateTimings',
+    # 'template_profiler_panel.panels.template.TemplateProfilerPanel',
+    # 'debug_toolbar_mongo.panel.MongoDebugPanel',
     'debug_toolbar.panels.staticfiles.StaticFilesPanel',
     'debug_toolbar.panels.templates.TemplatesPanel',
     'debug_toolbar.panels.cache.CachePanel',
@@ -533,8 +545,7 @@ if old_mongoengine:
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     #'crits.core.user.AuthenticationMiddleware',
@@ -600,10 +611,10 @@ else:
         
     if ENABLE_DT:
         INSTALLED_APPS += ( 
-            'template_timings_panel',
-            'template_profiler_panel',
-            'debug_toolbar_mongo',
-            'vcs_info_panel',
+            # 'template_timings_panel',
+            # 'template_profiler_panel',
+            # 'debug_toolbar_mongo',
+            # 'vcs_info_panel',
             'debug_toolbar',
         )
 
@@ -611,7 +622,6 @@ else:
         'django.middleware.common.CommonMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -629,11 +639,14 @@ else:
     #SESSION_ENGINE = 'django_mongoengine.sessions'
 
     SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
+    
+    # File upload settings
+    FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+    DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
 
     AUTHENTICATION_BACKENDS = (
-
-        'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'crits.core.user.CRITsAuthBackend',
+        'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
     )        
         #'django.contrib.auth.backends.ModelBackend',
         #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
@@ -647,8 +660,7 @@ if REMOTE_USER:
             'django.middleware.common.CommonMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
-            'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-            'django.contrib.messages.middleware.MessageMiddleware',
+                        'django.contrib.messages.middleware.MessageMiddleware',
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
         )
@@ -669,8 +681,7 @@ if REMOTE_USER:
             'django.middleware.common.CommonMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
-            'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-            'django.contrib.messages.middleware.MessageMiddleware',
+                        'django.contrib.messages.middleware.MessageMiddleware',
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',

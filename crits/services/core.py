@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 from datetime import datetime
-from distutils.version import StrictVersion
+try:
+    from distutils.version import StrictVersion
+except ImportError:
+    from packaging.version import Version as StrictVersion
 import importlib
 
 import logging

@@ -1,5 +1,8 @@
 from __future__ import absolute_import
-import cgi
+try:
+    import cgi
+except ImportError:
+    import html as cgi
 import re
 import string
 

@@ -24,6 +24,13 @@ from crits.stats.handlers import campaign_date_stats
 
 from crits.vocabulary.acls import CampaignACL
 
+def is_ajax(request):
+    """
+    Check if the request is an AJAX request.
+    Django 4.2+ compatible replacement for request.is_ajax()
+    """
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
 
 @user_passes_test(user_can_view_data)
 def campaign_stats(request):
@@ -43,7 +50,7 @@ def campaign_stats(request):
     campaign = request.GET.get("campaign", "all")
     if refresh == "yes":
         campaign_date_stats()
-    if request.is_ajax():
+    if is_ajax(request):
         data_list = get_campaign_stats(campaign)
         return HttpResponse(json.dumps(data_list,
                                        default=json_util.default),
@@ -132,7 +139,7 @@ def add_campaign(request):
     request.user._setup()
     user = request.user
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         campaign_form = AddCampaignForm(request.POST)
         if campaign_form.is_valid():
             if user.has_access_to(CampaignACL.WRITE):
@@ -186,7 +193,7 @@ def campaign_add(request, ctype, objectid):
     """
     user = request.user
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         form = CampaignForm(request.POST)
         result = {}
         acl = get_acl_object(ctype)
@@ -239,7 +246,7 @@ def edit_campaign(request, ctype, objectid):
     """
     user = request.user
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         form = CampaignForm(request.POST)
         acl = get_acl_object(ctype)
         if user.has_access_to(acl.CAMPAIGNS_EDIT):
@@ -299,7 +306,7 @@ def remove_campaign(request, ctype, objectid):
     """
     user = request.user
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         data = request.POST
         acl = get_acl_object(ctype)
         if user.has_access_to(acl.CAMPAIGNS_DELETE):
@@ -326,7 +333,7 @@ def campaign_ttp(request, cid):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         action = request.POST['action']
         user = request.user
         if action == "add":
@@ -375,7 +382,7 @@ def campaign_aliases(request):
     """
     user = request.user
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         if user.has_access_to(CampaignACL.ALIASES_EDIT):
             tags = request.POST.get('tags', "").split(",")
             name = request.POST.get('name', None)

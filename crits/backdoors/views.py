@@ -19,6 +19,13 @@ from crits.core.user_tools import user_can_view_data
 
 from crits.vocabulary.acls import BackdoorACL
 
+def is_ajax(request):
+    """
+    Check if the request is an AJAX request.
+    Django 4.2+ compatible replacement for request.is_ajax()
+    """
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
 
 @user_passes_test(user_can_view_data)
 def backdoors_listing(request,option=None):
@@ -87,7 +94,7 @@ def add_backdoor(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         request.user._setup()
         user = request.user
         data = request.POST
@@ -170,7 +177,7 @@ def edit_backdoor_name(request, id_):
     :returns: :class:`django.http.HttpResponseRedirect`
     """
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         user = request.user
         name = request.POST.get('name', None)
         if user.has_access_to(BackdoorACL.NAME_EDIT):
@@ -201,7 +208,7 @@ def edit_backdoor_aliases(request):
     :returns: :class:`django.http.HttpResponseRedirect`
     """
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         aliases = request.POST.get('aliases', None)
         id_ = request.POST.get('oid', None)
         request.user._setup()
@@ -230,7 +237,7 @@ def edit_backdoor_version(request, id_):
     :returns: :class:`django.http.HttpResponseRedirect`
     """
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         request.user._setup()
         user = request.user
         version = request.POST.get('version', None)

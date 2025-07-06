@@ -4,6 +4,7 @@ from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
+        re_path(r'^$', views.samples_listing, name='crits-samples-views-samples_listing_root'),
         re_path(r'^upload/$', views.upload_file, name='crits-samples-views-upload_file'),
         re_path(r'^upload/(?P<related_md5>\w+)/$', views.upload_file, name='crits-samples-views-upload_file'),
         re_path(r'^upload_list/(?P<filename>[\S ]+)/(?P<md5s>.+)/$', views.view_upload_list, name='crits-samples-views-view_upload_list'),
@@ -23,9 +24,4 @@ urlpatterns = [
         re_path(r'^yarahits/list/(?P<option>\S+)/$', views.yarahits_listing, name='crits-samples-views-yarahits_listing'),
         re_path(r'^set_filename/$', views.set_sample_filename, name='crits-samples-views-set_sample_filename'),
         re_path(r'^filenames/$', views.set_sample_filenames, name='crits-samples-views-set_sample_filenames'),
-        re_path(r'^list/(?P<option>\S+)/$', views.samples_listing),
-        re_path(r'^yarahits/list/$', views.yarahits_listing),
-        re_path(r'^yarahits/list/(?P<option>\S+)/$', views.yarahits_listing),
-        re_path(r'^set_filename/$', views.set_sample_filename),
-        re_path(r'^filenames/$', views.set_sample_filenames),
 ]

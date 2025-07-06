@@ -4,6 +4,7 @@ from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
+    re_path(r'^$', views.campaigns_listing, name='crits-campaigns-views-campaigns_listing_root'),
     re_path(r'^stats/$', views.campaign_stats, name='crits-campaigns-views-campaign_stats'),
     re_path(r'^name_list/$', views.campaign_names, name='crits-campaigns-views-campaign_names'),
     re_path(r'^name_list/(?P<active_only>\S+)/$', views.campaign_names, name='crits-campaigns-views-campaign_names'),

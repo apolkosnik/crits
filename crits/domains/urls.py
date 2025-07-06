@@ -4,6 +4,7 @@ from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
+    re_path(r'^$', views.domains_listing, name='crits-domains-views-domains_listing_root'),
     re_path(r'^list/$', views.domains_listing, name='crits-domains-views-domains_listing'),
     re_path(r'^list/(?P<option>\S+)/$', views.domains_listing, name='crits-domains-views-domains_listing'),
     re_path(r'^tld_update/$', views.tld_update, name='crits-domains-views-tld_update'),

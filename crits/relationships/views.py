@@ -13,6 +13,13 @@ from crits.relationships.handlers import update_relationship_types, delete_relat
 
 from crits.vocabulary.relationships import RelationshipTypes
 
+def is_ajax(request):
+    """
+    Check if the request is an AJAX request.
+    Django 4.2+ compatible replacement for request.is_ajax()
+    """
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
 @user_passes_test(user_can_view_data)
 def add_new_relationship(request):
     """
@@ -23,7 +30,7 @@ def add_new_relationship(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == 'POST' and request.is_ajax():
+    if request.method == 'POST' and is_ajax(request):
         form = ForgeRelationshipForm(request.POST)
         user = request.user
         choices = [(c,c) for c in RelationshipTypes.values(sort=True)]
@@ -80,7 +87,7 @@ def update_relationship_type(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == 'POST' and request.is_ajax():
+    if request.method == 'POST' and is_ajax(request):
         user = request.user
         acl = get_acl_object(request.POST['my_type'])
         if user.has_access_to(acl.RELATIONSHIPS_EDIT):
@@ -116,7 +123,7 @@ def update_relationship_confidence(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-    if request.method == 'POST' and request.is_ajax():
+    if request.method == 'POST' and is_ajax(request):
         new_confidence = request.POST['new_confidence']
         acls = get_acl_object(request.POST['my_type'])
         user = request.user
@@ -160,7 +167,7 @@ def update_relationship_reason(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-    if request.method == 'POST' and request.is_ajax():
+    if request.method == 'POST' and is_ajax(request):
         results = update_relationship_reasons(left_type=request.POST['my_type'],
                                             left_id=request.POST['my_value'],
                                             right_type=request.POST['reverse_type'],
@@ -191,7 +198,7 @@ def update_relationship_date(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == 'POST' and request.is_ajax():
+    if request.method == 'POST' and is_ajax(request):
         results = update_relationship_dates(left_type=request.POST['my_type'],
                                             left_id=request.POST['my_value'],
                                             right_type=request.POST['reverse_type'],
@@ -222,7 +229,7 @@ def break_relationship(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == 'POST' and request.is_ajax():
+    if request.method == 'POST' and is_ajax(request):
         acl = get_acl_object(request.POST['my_type'])
         user = request.user
         if user.has_access_to(acl.RELATIONSHIPS_DELETE):
@@ -265,7 +272,7 @@ def get_relationship_type_dropdown(request):
     """
 
     if request.method == 'POST':
-        if request.is_ajax():
+        if is_ajax(request):
             dd_final = {}
             for type_ in RelationshipTypes.values(sort=True):
                 dd_final[type_] = type_

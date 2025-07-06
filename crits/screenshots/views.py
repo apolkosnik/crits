@@ -12,6 +12,13 @@ from crits.screenshots.handlers import delete_screenshot_from_object
 
 from crits.vocabulary.acls import ScreenshotACL
 
+def is_ajax(request):
+    """
+    Check if the request is an AJAX request.
+    Django 4.2+ compatible replacement for request.is_ajax()
+    """
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
 
 @user_passes_test(user_can_view_data)
 def screenshots_listing(request,option=None):
@@ -37,7 +44,7 @@ def get_screenshots(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == 'POST' and request.is_ajax():
+    if request.method == 'POST' and is_ajax(request):
         analyst = request.user.username
         type_ = request.POST.get('type', None)
         _id = request.POST.get('id', None)

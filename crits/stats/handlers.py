@@ -114,7 +114,7 @@ def update_results(collection, m, r, stat_query, field, campaign_stats):
     :returns: dict
     """
 
-    if collection.find().count() > 0:
+    if collection.count_documents({}) > 0:
         results = collection.inline_map_reduce(m,r, query=stat_query)
         for result in results:
             if result["_id"] != None:
@@ -205,17 +205,17 @@ def generate_counts():
     last_seven = start - datetime.timedelta(7)
     last_thirty = start - datetime.timedelta(30)
     count = {}
-    count['Samples'] = samples.find().count()
-    count['Emails'] = emails.find().count()
-    count['Indicators'] = indicators.find().count()
-    count['PCAPs'] = pcaps.find().count()
-    count['Domains'] = domains.find().count()
-    count['Emails Today'] = emails.find({"source.instances.date": {"$gte": today}}).count()
-    count['Emails Last 7'] = emails.find({'source.instances.date': {'$gte': last_seven}}).count()
-    count['Emails Last 30'] = emails.find({'source.instances.date': {'$gte': last_thirty}}).count()
-    count['Indicators Today'] = indicators.find({"source.instances.date": {"$gte": today}}).count()
-    count['Indicators Last 7'] = indicators.find({"source.instances.date": {"$gte": last_seven}}).count()
-    count['Indicators Last 30'] = indicators.find({"source.instances.date": {"$gte": last_thirty}}).count()
+    count['Samples'] = samples.count_documents({})
+    count['Emails'] = emails.count_documents({})
+    count['Indicators'] = indicators.count_documents({})
+    count['PCAPs'] = pcaps.count_documents({})
+    count['Domains'] = domains.count_documents({})
+    count['Emails Today'] = emails.count_documents({"source.instances.date": {"$gte": today}})
+    count['Emails Last 7'] = emails.count_documents({'source.instances.date': {'$gte': last_seven}})
+    count['Emails Last 30'] = emails.count_documents({'source.instances.date': {'$gte': last_thirty}})
+    count['Indicators Today'] = indicators.count_documents({"source.instances.date": {"$gte": today}})
+    count['Indicators Last 7'] = indicators.count_documents({"source.instances.date": {"$gte": last_seven}})
+    count['Indicators Last 30'] = indicators.count_documents({"source.instances.date": {"$gte": last_thirty}})
     counts.update({'name': "counts"}, {'$set': {'counts': count}}, upsert=True)
 
 

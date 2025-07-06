@@ -4,6 +4,16 @@ import re
 import datetime
 import six
 
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+from django.http import HttpResponse
+from django.shortcuts import render
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id, class_from_value
@@ -37,7 +47,7 @@ def get_valid_root_domain(domain):
     """
 
     root = fqdn = error = ""
-    black_list = "/:@\ "
+    black_list = r"/:@\ "
     domain = domain.strip()
 
     if any(c in black_list for c in domain):
@@ -729,18 +739,25 @@ def update_tlds(data=None):
 
     if not data:
         return {'success': False}
-    line = data.readline()
-    while line:
-        line = line.rstrip()
-        if line and not line.startswith('//'):
-            line = line.replace("*.", "")
-            TLD.objects(tld=line).update_one(set__tld=line, upsert=True)
+    
+    try:
         line = data.readline()
+        while line:
+            # Handle both bytes and string data
+            if isinstance(line, bytes):
+                line = line.decode('utf-8')
+            line = line.rstrip()
+            if line and not line.startswith('//'):
+                line = line.replace("*.", "")
+                TLD.objects(tld=line).update_one(set__tld=line, upsert=True)
+            line = data.readline()
 
-    # Update the package local tld_parser with the new domain info
-    tld_parser = etld()
+        # Update the package local tld_parser with the new domain info
+        tld_parser = etld()
 
-    return {'success': True}
+        return {'success': True}
+    except Exception as e:
+        return {'success': False, 'message': str(e)}
 
 class etld(object):
     """
@@ -764,10 +781,10 @@ class etld(object):
         """
 
         etld = etld[::-1].replace('.',
-                                  '\\.').replace('*',
-                                                 '[^\\.]*').replace('!',
+                                  r'\.').replace('*',
+                                                 r'[^\.]*').replace('!',
                                                                     '')
-        return '^(%s)\.(.*)$' % etld
+        return r'^(%s)\.(.*)$' % etld
 
     def parse(self, hostname):
         """

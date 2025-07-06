@@ -15,6 +15,13 @@ from crits.vocabulary.acls import GeneralACL
 
 logger = logging.getLogger(__name__)
 
+def is_ajax(request):
+    """
+    Check if the request is an AJAX request.
+    Django 4.2+ compatible replacement for request.is_ajax()
+    """
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
 @user_passes_test(user_can_view_data)
 def crits_config(request):
     """
@@ -84,7 +91,7 @@ def modify_config(request):
     errors = []
     permission_error = False
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         if user.has_access_to(GeneralACL.CONTROL_PANEL_GENERAL_EDIT):
             config_general_form = ConfigGeneralForm(request.POST)
         else:

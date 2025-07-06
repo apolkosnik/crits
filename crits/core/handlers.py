@@ -1,12 +1,15 @@
 from __future__ import absolute_import
-import cgi
+try:
+    import cgi
+except ImportError:
+    import html as cgi
 import os
 import datetime
 import six.moves.html_parser
 import json
 import logging
 import re
-import ushlex as shlex
+import shlex
 import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 
 from six.moves.urllib.parse import urlparse
@@ -22,6 +25,28 @@ import six
 from six.moves import map
 # we implement django.contrib.auth.login as user_login in here to accomodate mongoengine/pymongo
 
+try:
+    from django.urls import reverse, resolve, get_script_prefix
+except ImportError:
+    from django.core.urlresolvers import reverse, resolve, get_script_prefix
+from django.http import HttpResponse
+from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.utils.html import escape as html_escape
+from django.utils.http import urlencode
+try:
+    from django.utils.http import urlunquote
+except ImportError:
+    from urllib.parse import unquote as urlunquote
+try:
+    from django.utils.http import is_safe_url
+except ImportError:
+    from django.utils.http import url_has_allowed_host_and_scheme as is_safe_url
+
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from operator import itemgetter
 
@@ -70,6 +95,13 @@ from crits.vocabulary.acls import *
 
 
 logger = logging.getLogger(__name__)
+
+def is_ajax(request):
+    """
+    Check if the request is an AJAX request.
+    Django 4.2+ compatible replacement for request.is_ajax()
+    """
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 def action_add(type_, id_, tlo_action, user=None, **kwargs):
     """
@@ -1599,7 +1631,7 @@ def parse_search_term(term, force_full=False):
     # setup lexer, parse our term, and define operators
     try:
         sh = shlex.shlex(term.strip())
-        sh.wordchars += '!@#$%^&*()-_=+[]{}|\:;<,>.?/~`'
+        sh.wordchars += '!@#$%^&*()-_=+[]{}|:;<,>.?/~`'
         sh.commenters = ''
         parsed = list(iter(sh.get_token, ''))
     except Exception as e:
@@ -2001,7 +2033,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     docs = None
     try:
         if not issubclass(col_obj,CritsSourceDocument):
-            results['count'] = col.find(query).count()
+            results['count'] = col.count_documents(query)
             if count:
                 results['result'] = "OK"
                 return results
@@ -2032,10 +2064,11 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
 
             #docs = col_obj.objects.filter(id__in=filterlist).\
             tlp_filter_query = user.filter_dict_source_tlp(query)
-            docs = col_obj.objects.filter(__raw__=tlp_filter_query).\
-                                            order_by(*sort).skip(skip).\
+            # Get count before applying skip/limit to avoid cursor issues
+            base_query = col_obj.objects.filter(__raw__=tlp_filter_query)
+            results['count'] = base_query.count()
+            docs = base_query.order_by(*sort).skip(skip).\
                                             only(*projection).limit(limit)
-            results['count'] = docs.count()
             if count:
                 results['result'] = "OK"
                 return results
@@ -2203,7 +2236,8 @@ def get_query(col_obj,request):
         otype = request.GET.get('otype', None)
         if otype:
             search_type = search_type + "_" + otype
-        term = six.moves.html_parser.HTMLParser().unescape(term)
+        import html
+        term = html.unescape(term)
         qdict = gen_global_query(col_obj,
                                  request.user.username,
                                  term,
@@ -2278,7 +2312,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
     users_sources = user_sources(request.user.username)
 
     user = request.user
-    if request.is_ajax():
+    if is_ajax(request):
         pageSize = request.user.get_preference('ui','table_page_size',25)
 
         # Thought these were POSTs...GET works though

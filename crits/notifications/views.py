@@ -9,6 +9,13 @@ from django.shortcuts import render
 from crits.core.user_tools import user_can_view_data
 from crits.notifications.handlers import remove_user_from_notification_id, get_notification_details
 
+def is_ajax(request):
+    """
+    Check if the request is an AJAX request.
+    Django 4.2+ compatible replacement for request.is_ajax()
+    """
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
 
 @user_passes_test(user_can_view_data)
 def poll(request):
@@ -21,7 +28,7 @@ def poll(request):
     is_user_toast_enabled = request.user.get_preference('toast_notifications', 'enabled', True)
 
     if is_user_toast_enabled and settings.ENABLE_TOASTS:
-        if request.method == 'POST' and request.is_ajax():
+        if request.method == 'POST' and is_ajax(request):
             newer_than = request.POST.get("newer_than", None)
 
             if newer_than == "":
@@ -54,7 +61,7 @@ def acknowledge(request):
     is_user_toast_enabled = request.user.get_preference('toast_notifications', 'enabled', True)
 
     if is_user_toast_enabled and settings.ENABLE_TOASTS:
-        if request.method == 'POST' and request.is_ajax():
+        if request.method == 'POST' and is_ajax(request):
             id = request.POST.get("id", None)
 
             remove_user_from_notification_id(request.user.username, id)

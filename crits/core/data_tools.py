@@ -107,49 +107,50 @@ def create_zip(files, pw_protect=True):
 
             # make sure our desired path doesn't already exist (some files may
             # have the same name but different data)
-            path = dumpdir + "/" + filename.encode("utf-8")
+            path = dumpdir + "/" + filename
             i = 1
             tmp = path
             while os.path.exists(tmp):
                 tmp = path+"("+str(i)+")"
                 i += 1
 
-            with open(tmp, "wb") as fh:
-                fh.write(file_data)
+            if file_data is not None:
+                with open(tmp, "wb") as fh:
+                    fh.write(file_data)
+            else:
+                # Skip files with no data
+                continue
 
         # Build the command line for zip
-        # NOTE: forking subprocess instead of using Python's ZipFile library
-        # because ZipFile does not allow us to create password-protected zip
-        # archives, only read them.
-        # -j don't include original filepath
-        zipname = "zip.zip" #The name we give it doesn't really matter
-        args = ["/usr/bin/zip", "-r", "-j", dumpdir+"/"+zipname, dumpdir]
-        if pw_protect:
-            args += ["-P", zip7_password]
-        args += [dumpdir+"/"+zipname, dumpdir]
-
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
-        # Give the process 30 seconds to complete, otherwise kill it
-        waitSeconds = 30
-        while (proc.poll() is None and waitSeconds):
-            time.sleep(1)
-            waitSeconds -= 1
-
-        zipdata = ""
-        if proc.returncode:     # zip spit out an error
-            errmsg = "Error while creating archive\n" + proc.stdout.read()
+        # Use Python's ZipFile library as fallback since zip utility is not installed
+        import zipfile
+        zipname = "zip.zip"
+        zip_path = os.path.join(dumpdir, zipname)
+        
+        try:
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+                for root, dirs, files in os.walk(dumpdir):
+                    for file in files:
+                        if file != zipname:  # Don't include the zip file itself
+                            file_path = os.path.join(root, file)
+                            arcname = os.path.basename(file_path)  # Just the filename, no path
+                            zf.write(file_path, arcname)
+            
+            # Read the zip file data
+            with open(zip_path, 'rb') as zf:
+                zip_data = zf.read()
+            
+            # Clean up temp directory
+            shutil.rmtree(dumpdir)
+            return zip_data
+            
+        except Exception as e:
+            errmsg = str(e)
+            logger.error("create_zip: zip creation failed: %s" % (errmsg))
+            shutil.rmtree(dumpdir)
             raise ZipFileError(errmsg)
-        elif not waitSeconds:   # Process timed out
-            proc.terminate()
-            raise ZipFileError("Error:\nProcess failed to terminate")
-        else:
-            with open(dumpdir + "/" + zipname, "rb") as fh:
-                zipdata = fh.read()
-        if not len(zipdata):
-            raise ZipFileError("Error:\nThe zip archive contains no data")
-        return zipdata
+        
+        # Old zip command code removed - now using Python zipfile module above
 
     except ZipFileError:
         raise

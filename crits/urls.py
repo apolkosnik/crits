@@ -1,5 +1,8 @@
 from __future__ import absolute_import
-import imp
+try:
+    import imp
+except ImportError:
+    import importlib.util as imp
 import os
 
 from django.conf import settings

@@ -5,6 +5,16 @@ import json
 import six.moves.html_parser
 import six
 
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+from django.http import HttpResponse
+from django.shortcuts import render
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete

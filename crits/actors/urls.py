@@ -4,6 +4,7 @@ from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
+    re_path(r'^$', views.actors_listing, name='crits-actors-views-actors_listing_root'),
     path('add/', views.add_actor, name='crits-actors-views-add_actor'),
     path('add_identifier_type/', views.new_actor_identifier_type, name='crits-actors-views-new_actor_identifier_type'),
     path('tags/modify/', views.actor_tags_modify, name='crits-actors-views-actor_tags_modify'),

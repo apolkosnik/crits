@@ -14,6 +14,13 @@ from crits.locations.handlers import (
 )
 from crits.core.user_tools import user_can_view_data, get_acl_object
 
+def is_ajax(request):
+    """
+    Check if the request is an AJAX request.
+    Django 4.2+ compatible replacement for request.is_ajax()
+    """
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
 
 @user_passes_test(user_can_view_data)
 def location_names(request, active_only=True):
@@ -44,7 +51,7 @@ def add_location(request, type_, id_):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         form = AddLocationForm(request.POST)
         result = {}
         if form.is_valid():
@@ -96,7 +103,7 @@ def remove_location(request, type_, id_):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and is_ajax(request):
         data = request.POST
         location_name = data.get('key').split('|')[0]
         location_type = data.get('key').split('|')[1]

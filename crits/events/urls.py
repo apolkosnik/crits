@@ -4,6 +4,7 @@ from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
+    re_path(r'^$', views.events_listing, name='crits-events-views-events_listing_root'),
     re_path(r'^details/(?P<eventid>\w+)/$', views.view_event, name='crits-events-views-view_event'),
     re_path(r'^add/$', views.add_event, name='crits-events-views-add_event'),
     re_path(r'^search/$', views.event_search, name='crits-events-views-event_search'),

@@ -401,7 +401,15 @@ class TLDUpdateForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    filedata = forms.FileField()
+    filedata = forms.FileField(required=True)
+    
+    def clean_filedata(self):
+        filedata = self.cleaned_data.get('filedata')
+        if not filedata:
+            raise forms.ValidationError("No file was uploaded")
+        if filedata.size > 5 * 1024 * 1024:  # 5MB limit
+            raise forms.ValidationError("File too large (max 5MB)")
+        return filedata
 
 
 class SourceAccessForm(forms.Form):

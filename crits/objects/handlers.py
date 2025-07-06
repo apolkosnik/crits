@@ -5,6 +5,10 @@ from hashlib import md5
 
 from django.conf import settings
 from django.template.loader import render_to_string
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id, class_from_type
@@ -289,7 +293,7 @@ def add_object(type_, id_, object_type, source, method, reference, tlp, user,
                 #     need to use pymongo directly.
                 col = settings.COL_OBJECTS
                 grid = mongo_connector("%s.files" % col)
-                if grid.find({'md5': md5sum}).count() == 0:
+                if grid.count_documents({'md5': md5sum}) == 0:
                     put_file(filename, data, collection=col)
 
         if add_indicator and not is_validate_only:

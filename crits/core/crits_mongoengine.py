@@ -11,12 +11,16 @@ from django.conf import settings
 import six
 
 # Determine if we should be caching queries or not.
-if settings.QUERY_CACHING:
-    from mongoengine import QuerySet as QS
-else:
+try:
+    if settings.QUERY_CACHING:
+        from mongoengine import QuerySet as QS
+    else:
+        from mongoengine import QuerySetNoCache as QS
+except (AttributeError, ImportError):
+    # Default to QuerySetNoCache if settings aren't available or configured
     from mongoengine import QuerySetNoCache as QS
 
-from mongoengine import Document, EmbeddedDocument, DynamicDocument, DynamicEmbeddedDocument, StringField, IntField, ListField, DictField, BooleanField, DateTimeField
+from mongoengine import Document, EmbeddedDocument, DynamicDocument, DynamicEmbeddedDocument, StringField, IntField, ListField, DictField, BooleanField, DateTimeField, EmbeddedDocumentField, ValidationError, ObjectIdField
 from mongoengine.base import BaseDocument
 
 from pprint import pformat
